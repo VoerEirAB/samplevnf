@@ -48,7 +48,7 @@
 static const struct rte_eth_conf default_port_conf = {
 	.rxmode = {
 		.mq_mode        = 0,
-		.max_rx_pkt_len = PROX_MTU + ETHER_HDR_LEN + ETHER_CRC_LEN
+		.max_rx_pkt_len = PROX_MTU + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN
 	},
 	.rx_adv_conf = {
 		.rss_conf = {
@@ -82,9 +82,11 @@ static struct rte_sched_port_params port_params_default = {
 	.frame_overhead = RTE_SCHED_FRAME_OVERHEAD_DEFAULT,
 	.n_subports_per_port = 1,
 	.n_pipes_per_subport = NB_PIPES,
+#if RTE_VERSION < RTE_VERSION_NUM(19,11,0,0)
 	.qsize = {QUEUE_SIZES, QUEUE_SIZES, QUEUE_SIZES, QUEUE_SIZES},
 	.pipe_profiles = NULL,
 	.n_pipe_profiles = 1 /* only one profile */
+#endif
 };
 
 static struct rte_sched_pipe_params pipe_params_default = {
@@ -94,7 +96,11 @@ static struct rte_sched_pipe_params pipe_params_default = {
 	.tc_rate = {TEN_GIGABIT / NB_PIPES, TEN_GIGABIT / NB_PIPES, TEN_GIGABIT / NB_PIPES, TEN_GIGABIT / NB_PIPES},
 	.tc_period = 40,
 
+#if RTE_VERSION >= RTE_VERSION_NUM(19,8,0,0)
+	.wrr_weights = {1, 1, 1, 1},
+#else
 	.wrr_weights = {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+#endif
 };
 
 static struct rte_sched_subport_params subport_params_default = {
@@ -102,6 +108,11 @@ static struct rte_sched_subport_params subport_params_default = {
 	.tb_size = 4000000,
 	.tc_rate = {TEN_GIGABIT, TEN_GIGABIT, TEN_GIGABIT, TEN_GIGABIT},
 	.tc_period = 40, /* default was 10 */
+#if RTE_VERSION >= RTE_VERSION_NUM(19,11,0,0)
+	.qsize = {QUEUE_SIZES, QUEUE_SIZES, QUEUE_SIZES, QUEUE_SIZES},
+	.pipe_profiles = NULL,
+	.n_pipe_profiles = 1 /* only one profile */
+#endif
 };
 
 void set_global_defaults(__attribute__((unused)) struct prox_cfg *prox_cfg)
@@ -133,7 +144,11 @@ void set_task_defaults(struct prox_cfg* prox_cfg, struct lcore_cfg* lcore_cfg_in
 			targ->qos_conf.port_params = port_params_default;
 			targ->qos_conf.pipe_params[0] = pipe_params_default;
 			targ->qos_conf.subport_params[0] = subport_params_default;
+#if RTE_VERSION >= RTE_VERSION_NUM(19,11,0,0)
+			targ->qos_conf.subport_params[0].pipe_profiles = targ->qos_conf.pipe_params;
+#else
 			targ->qos_conf.port_params.pipe_profiles = targ->qos_conf.pipe_params;
+#endif
 			targ->qos_conf.port_params.rate = TEN_GIGABIT;
 			targ->qinq_tag = ETYPE_8021ad;
 			targ->n_concur_conn = 8192*2;
@@ -146,14 +161,14 @@ void set_task_defaults(struct prox_cfg* prox_cfg, struct lcore_cfg* lcore_cfg_in
 				targ->mapping[i] = i; // identity
 			}
 
-			targ->cbs = ETHER_MAX_LEN;
-			targ->ebs = ETHER_MAX_LEN;
-			targ->pbs = ETHER_MAX_LEN;
+			targ->cbs = PROX_RTE_ETHER_MAX_LEN;
+			targ->ebs = PROX_RTE_ETHER_MAX_LEN;
+			targ->pbs = PROX_RTE_ETHER_MAX_LEN;
 
 			targ->n_max_rules = 1024;
 			targ->ring_size = RING_RX_SIZE;
 			targ->nb_cache_mbuf = MAX_PKT_BURST * 4;
-			targ->overhead = ETHER_CRC_LEN + 20;
+			targ->overhead = PROX_RTE_ETHER_CRC_LEN + 20;
 
 			targ->tunnel_hop_limit = 3;
 			targ->ctrl_freq = 1000;

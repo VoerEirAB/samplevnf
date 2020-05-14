@@ -172,13 +172,10 @@ class prox_sock(object):
     def stop(self, cores):
         self._send('stop %s' % ','.join(map(str, cores)))
 
-    def speed(self, speed, cores, tasks=None):
-        if tasks is None:
-            tasks = [ 0 ] * len(cores)
-        elif len(tasks) != len(cores):
-            raise ValueError('cores and tasks must have the same len')
-        for (core, task) in zip(cores, tasks):
-            self._send('speed %s %s %s' % (core, task, speed))
+    def speed(self, speed, cores, tasks=[0]):
+        for core in cores:
+        	for task in tasks:
+			self._send('speed %s %s %s' % (core, task, speed))
 
     def reset_stats(self):
         self._send('reset stats')
@@ -187,6 +184,46 @@ class prox_sock(object):
         min_lat = 999999999
 	max_lat = avg_lat = 0
 	number_tasks_returning_stats = 0
+	buckets = [0] * 128
+        self._send('lat all stats %s %s' % (','.join(map(str, cores)), ','.join(map(str, tasks))))
+        for core in cores:
+	    	for task in tasks:
+	        	stats = self._recv().split(',')
+			if 'is not measuring' in stats[0]:
+				continue
+			if stats[0].startswith('error'):
+				log.critical("lat stats error: unexpected reply from PROX (potential incompatibility between scripts and PROX)")
+				raise Exception("lat stats error")
+			number_tasks_returning_stats += 1
+			min_lat = min(int(stats[0]),min_lat)
+			max_lat = max(int(stats[1]),max_lat)
+			avg_lat += int(stats[2])
+			#min_since begin = int(stats[3])
+			#max_since_begin = int(stats[4])
+			tsc = int(stats[5]) # Taking the last tsc as the timestamp since PROX will return the same tsc for each core/task combination 
+			hz = int(stats[6])
+			#coreid = int(stats[7])
+			#taskid = int(stats[8])
+	        	stats = self._recv().split(':')
+			if stats[0].startswith('error'):
+				log.critical("lat stats error: unexpected lat bucket reply (potential incompatibility between scripts and PROX)")
+				raise Exception("lat bucket reply error")
+			buckets[0] = int(stats[1])
+			for i in range(1, 128):
+	        		stats = self._recv().split(':')
+				buckets[i] = int(stats[1])
+        avg_lat = avg_lat/number_tasks_returning_stats
+        self._send('stats latency(0).used')
+        used = float(self._recv())
+        self._send('stats latency(0).total')
+        total = float(self._recv())
+        return min_lat, max_lat, avg_lat, (used/total), tsc, hz, buckets
+
+    def old_lat_stats(self, cores, tasks=[0]):
+        min_lat = 999999999
+	max_lat = avg_lat = 0
+	number_tasks_returning_stats = 0
+	buckets = [0] * 128
         self._send('lat stats %s %s' % (','.join(map(str, cores)), ','.join(map(str, tasks))))
         for core in cores:
 	    	for task in tasks:
@@ -200,12 +237,18 @@ class prox_sock(object):
 			min_lat = min(int(stats[0]),min_lat)
 			max_lat = max(int(stats[1]),max_lat)
 			avg_lat += int(stats[2])
+			#min_since begin = int(stats[3])
+			#max_since_begin = int(stats[4])
+			tsc = int(stats[5])
+			hz = int(stats[6])
+			#coreid = int(stats[7])
+			#taskid = int(stats[8])
         avg_lat = avg_lat/number_tasks_returning_stats
         self._send('stats latency(0).used')
         used = float(self._recv())
         self._send('stats latency(0).total')
         total = float(self._recv())
-        return min_lat, max_lat, avg_lat, (used/total)
+        return min_lat, max_lat, avg_lat, (used/total), tsc, hz, buckets
 
     def irq_stats(self, core, bucket, task=0):
         self._send('stats task.core(%s).task(%s).irq(%s)' % (core, task, bucket))
@@ -239,6 +282,23 @@ class prox_sock(object):
 			tsc = int(stats[6])
 			hz = int(stats[7])
         return rx, rx_non_dp, tx, tx_non_dp, drop, tx_fail, tsc, hz
+
+    def multi_port_stats(self, ports=[0]):
+        rx = tx = port_id = tsc = no_mbufs = errors = 0
+        self._send('multi port stats %s' % (','.join(map(str, ports))))
+	result = self._recv().split(';')
+	if result[0].startswith('error'):  
+		log.critical("multi port stats error: unexpected invalid syntax (potential incompatibility between scripts and PROX)")
+		raise Exception("multi port stats error")
+        for statistics in result:
+		stats = statistics.split(',')
+		port_id = int(stats[0])
+		rx += int(stats[1])
+		tx += int(stats[2])
+		no_mbufs += int(stats[3])
+		errors += int(stats[4])
+		tsc = int(stats[5])
+        return rx, tx, no_mbufs, errors, tsc
 
     def set_random(self, cores, task, offset, mask, length):
         self._send('set random %s %s %s %s %s' % (','.join(map(str, cores)), task, offset, mask, length))

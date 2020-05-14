@@ -1,7 +1,6 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 ##
-## Copyright (c) 2010-2017 Intel Corporation
+## Copyright (c) 2010-2019 Intel Corporation
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -16,12 +15,14 @@
 ## limitations under the License.
 ##
 
-link="$(ip -o link | grep MACADDRESS |cut -d":" -f 2)"
-if [ -n "$link" ];
-then
-	echo Need to bind
-	/root/dpdk/usertools/dpdk-devbind.py --force --bind igb_uio $(/root/dpdk/usertools/dpdk-devbind.py --status |grep  $link | cut -d" " -f 1)
-else
-       echo Assuming port is already bound to DPDK
-fi
-exit 0
+function save_k8s_envs()
+{
+	printenv | grep "PCIDEVICE_INTEL_COM" > /opt/k8s_sriov_device_plugin_envs
+}
+
+save_k8s_envs
+
+# Start SSH server in background
+/usr/sbin/sshd
+
+exec sleep infinity

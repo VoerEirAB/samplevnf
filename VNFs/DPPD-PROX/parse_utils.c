@@ -175,7 +175,7 @@ int parse_vars(char *val, size_t len, const char *name)
 					return -1;
 				}
 
-				prox_strncpy(&cur_var[1], &name[start_var], var_len);
+				strncpy(&cur_var[1], &name[start_var], var_len);
 				cur_var[1 + var_len] = 0;
 				if (parse_single_var(parsed, sizeof(parsed), cur_var)) {
 					return -1;
@@ -422,7 +422,7 @@ int parse_ip6(struct ipv6_addr *addr, const char *str2)
 	return 0;
 }
 
-int parse_mac(struct ether_addr *ether_addr, const char *str2)
+int parse_mac(prox_rte_ether_addr *ether_addr, const char *str2)
 {
 	char str[MAX_STR_LEN_PROC];
 	char *addr_parts[7];

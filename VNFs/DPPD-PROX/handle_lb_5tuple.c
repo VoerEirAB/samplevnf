@@ -49,6 +49,7 @@ struct task_lb_5tuple {
 	struct task_base base;
 	uint32_t runtime_flags;
 	struct rte_hash *lookup_hash;
+	uint8_t src_dst_mac[12];
 	uint8_t out_if[HASH_MAX_SIZE] __rte_cache_aligned;
 };
 
@@ -60,37 +61,79 @@ static inline uint8_t get_ipv4_dst_port(struct task_lb_5tuple *task, void *ipv4_
 
 	ipv4_hdr = (uint8_t *)ipv4_hdr + offsetof(prox_rte_ipv4_hdr, time_to_live);
 	__m128i data = _mm_loadu_si128((__m128i*)(ipv4_hdr));
-	/* Get 5 tuple: dst port, src port, dst IP address, src IP address and protocol */
-        key.xmm = _mm_and_si128(data, mask0);
+    key.xmm = _mm_and_si128(data, mask0);
 
-	/* Get 5 tuple: dst port, src port, dst IP address, src IP address and protocol */
-	/*
- 	rte_mov16(&key.pad0, ipv4_hdr);
-	key.pad0 = 0;
-	key.pad1 = 0;
-	*/
-	/* Find destination port */
 	ret = rte_hash_lookup(ipv4_l3fwd_lookup_struct, (const void *)&key);
-	return (uint8_t)((ret < 0)? portid : task->out_if[ret]);
+	if (((ret < 0) || (uint8_t)(task->out_if[ret])) != 0){
+	    TASK_STATS_ADD_DROP_DISCARD(&task->base.aux->stats, 1);
+	    return OUT_DISCARD;
+	}
+	return 0;
+}
+static void write_src_and_dst_mac(struct task_lb_5tuple *task, struct rte_mbuf *mbuf)
+{
+	prox_rte_ether_hdr *hdr;
+	prox_rte_ether_addr mac;
+
+	if (unlikely((task->runtime_flags & (TASK_ARG_DST_MAC_SET|TASK_ARG_SRC_MAC_SET)) == (TASK_ARG_DST_MAC_SET|TASK_ARG_SRC_MAC_SET))) {
+		hdr = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
+              	rte_memcpy(hdr, task->src_dst_mac, sizeof(task->src_dst_mac));
+	} else {
+		hdr = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
+		if (likely((task->runtime_flags & TASK_ARG_SRC_MAC_SET) == 0)) {
+			prox_rte_ether_addr_copy(&hdr->d_addr, &mac);
+		}
+
+		if (unlikely(task->runtime_flags & TASK_ARG_DST_MAC_SET))
+			prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[0], &hdr->d_addr);
+		else
+			prox_rte_ether_addr_copy(&hdr->s_addr, &hdr->d_addr);
+
+		if (unlikely(task->runtime_flags & TASK_ARG_SRC_MAC_SET)) {
+			prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[6], &hdr->s_addr);
+		} else {
+			prox_rte_ether_addr_copy(&mac, &hdr->s_addr);
+		}
+	}
+}
+static void swap_packet(struct task_lb_5tuple *task, struct rte_mbuf *mbuf) {
+    uint32_t ip;
+	uint16_t port;
+	prox_rte_ether_hdr *hdr;
+	prox_rte_ether_addr mac;
+	prox_rte_ipv4_hdr *ip_hdr;
+	prox_rte_udp_hdr *udp_hdr;
+    hdr = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
+    ip_hdr = (prox_rte_ipv4_hdr *)(hdr + 1);
+    udp_hdr = (prox_rte_udp_hdr *)(ip_hdr + 1);
+    ip = ip_hdr->dst_addr;
+    ip_hdr->dst_addr = ip_hdr->src_addr;
+    ip_hdr->src_addr = ip;
+    port = udp_hdr->dst_port;
+    udp_hdr->dst_port = udp_hdr->src_port;
+    udp_hdr->src_port = port;
+    write_src_and_dst_mac(task, mbuf);
 }
 
 static inline uint8_t handle_lb_5tuple(struct task_lb_5tuple *task, struct rte_mbuf *mbuf)
 {
 	prox_rte_ether_hdr *eth_hdr;
 	prox_rte_ipv4_hdr *ipv4_hdr;
+	uint8_t x;
 
 	eth_hdr = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
 
 	switch (eth_hdr->ether_type) {
 	case ETYPE_IPv4:
-		/* Handle IPv4 headers.*/
 		ipv4_hdr = (prox_rte_ipv4_hdr *) (eth_hdr + 1);
-		return get_ipv4_dst_port(task, ipv4_hdr, OUT_DISCARD, task->lookup_hash);
+		x = get_ipv4_dst_port(task, ipv4_hdr, OUT_DISCARD, task->lookup_hash);
+		if (x != OUT_DISCARD) swap_packet(task, mbuf);
+		return x;
 	default:
+	    TASK_STATS_ADD_DROP_DISCARD(&task->base.aux->stats, 1);
 		return OUT_DISCARD;
 	}
 }
-
 static int handle_lb_5tuple_bulk(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts)
 {
 	struct task_lb_5tuple *task = (struct task_lb_5tuple *)tbase;
@@ -112,7 +155,6 @@ static int handle_lb_5tuple_bulk(struct task_base *tbase, struct rte_mbuf **mbuf
 		out[j] = handle_lb_5tuple(task, mbufs[j]);
 	}
 #endif
-
 	return task->base.tx_pkt(&task->base, mbufs, n_pkts, out);
 }
 

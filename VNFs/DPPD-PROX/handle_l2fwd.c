@@ -28,20 +28,50 @@ struct task_l2fwd {
 	uint32_t runtime_flags;
 };
 
+static inline uint8_t handle_port_range(struct task_l2fwd *task, struct rte_mbuf *mbuf)
+{
+    uint64_t *first;
+    first = rte_pktmbuf_mtod(mbuf, uint64_t *);
+    if (*first == 0) return OUT_DISCARD;
+
+	prox_rte_ether_hdr *peth = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
+	const prox_rte_ipv4_hdr *ipv4_hdr;
+	const uint16_t eth_type = peth->ether_type;
+	ipv4_hdr = (const prox_rte_ipv4_hdr *)(peth+1);
+	if (ipv4_hdr->next_proto_id == IPPROTO_UDP) {
+	    const prox_rte_udp_hdr *udp = (const prox_rte_udp_hdr *)((const uint8_t *)ipv4_hdr + sizeof(prox_rte_ipv4_hdr));
+	    if  (((udp->dst_port > 0x049C) && (udp->dst_port < 0x8813)) || ((udp->dst_port > 0x4C1D) && (udp->dst_port < 0x1027))) {
+	        TASK_STATS_ADD_DROP_DISCARD(&task->base.aux->stats, 1);
+			return OUT_DISCARD;
+		}
+	}
+	return 0;
+}
+
 static int handle_l2fwd_bulk(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts)
 {
 	struct task_l2fwd *task = (struct task_l2fwd *)tbase;
 	prox_rte_ether_hdr *hdr;
 	prox_rte_ether_addr mac;
+	uint8_t value;
+	uint8_t out[MAX_PKT_BURST];
 
 	if ((task->runtime_flags & (TASK_ARG_DST_MAC_SET|TASK_ARG_SRC_MAC_SET)) == (TASK_ARG_DST_MAC_SET|TASK_ARG_SRC_MAC_SET)) {
 		/* Source and Destination mac hardcoded */
 		for (uint16_t j = 0; j < n_pkts; ++j) {
+		    out[j] = handle_port_range(task, mbufs[j]);
+		    if (out[j] == OUT_DISCARD) {
+		        continue;
+		    }
 			hdr = rte_pktmbuf_mtod(mbufs[j], prox_rte_ether_hdr *);
                		rte_memcpy(hdr, task->src_dst_mac, sizeof(task->src_dst_mac));
 		}
 	} else {
 		for (uint16_t j = 0; j < n_pkts; ++j) {
+		    out[j] = handle_port_range(task, mbufs[j]);
+		    if (out[j] == OUT_DISCARD) {
+		        continue;
+		    }
 			hdr = rte_pktmbuf_mtod(mbufs[j], prox_rte_ether_hdr *);
 			if ((task->runtime_flags & (TASK_ARG_DO_NOT_SET_SRC_MAC|TASK_ARG_SRC_MAC_SET)) == 0) {
 				/* dst mac will be used as src mac */
@@ -60,7 +90,7 @@ static int handle_l2fwd_bulk(struct task_base *tbase, struct rte_mbuf **mbufs, u
 			}
 		}
 	}
-	return task->base.tx_pkt(&task->base, mbufs, n_pkts, NULL);
+	return task->base.tx_pkt(&task->base, mbufs, n_pkts, out);
 }
 
 static void init_task_l2fwd(struct task_base *tbase, struct task_args *targ)

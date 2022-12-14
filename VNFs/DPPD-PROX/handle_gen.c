@@ -491,7 +491,7 @@ static uint32_t get_n_rand_flows(struct task_gen *task)
 
 static void build_flow_table(struct task_gen *task)
 {
-	uint8_t buf[2048], *key_fields;
+	uint8_t buf[9048], *key_fields;
 	union ipv4_5tuple_host key;
 	struct pkt_template *pkt_template;
 	uint32_t n_range_flows = get_n_range_flows(task);
@@ -1456,6 +1456,7 @@ static struct rte_mempool *task_gen_create_mempool(struct task_args *targ, uint1
 	uint32_t mbuf_size = TX_MBUF_SIZE;
 	if (max_frame_size + (unsigned)sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM > mbuf_size)
 		mbuf_size = max_frame_size + (unsigned)sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM;
+	plog_info("\t\tMbuf Size to create mempool is %u.\n", mbuf_size);
 	plog_info("\t\tCreating mempool with name '%s'\n", name);
 	ret = rte_mempool_create(name, targ->nb_mbuf - 1, mbuf_size,
 				 targ->nb_cache_mbuf, sizeof(struct rte_pktmbuf_pool_private),

@@ -661,7 +661,12 @@ static int get_port_cfg(unsigned sindex, char *str, void *data)
 			}
 		}
 	}
-
+	else if (STR_EQ(str, "min rx buf")) {
+		uint32_t val;
+		if (parse_int(&val, pkey))
+			return -1;
+		cfg->min_rx_bufsize = val;
+    }
 	else if (STR_EQ(str, "rss")) {
 		uint32_t val;
 		if (parse_bool(&val, pkey)) {
@@ -2297,9 +2302,9 @@ int prox_setup_rte(const char *prog_name)
 	rte_argv[argc] = rte_arg[argc];
 #if RTE_VERSION >= RTE_VERSION_NUM(1,8,0,0)
 	if (prox_cfg.flags & DSF_USE_DUMMY_CPU_TOPO)
-		sprintf(rte_arg[++argc], "--master-lcore=%u", 0);
+		sprintf(rte_arg[++argc], "--main-lcore=%u", 0);
 	else
-		sprintf(rte_arg[++argc], "--master-lcore=%u", prox_cfg.master);
+		sprintf(rte_arg[++argc], "--main-lcore=%u", prox_cfg.master);
 	rte_argv[argc] = rte_arg[argc];
 #else
 	/* For old DPDK versions, the master core had to be the first

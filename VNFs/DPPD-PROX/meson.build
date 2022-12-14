@@ -136,6 +136,7 @@ dpdk_version = run_command('pkg-config', '--modversion', 'libdpdk').stdout()
 
 # Explicitly add these to the dependency list
 deps += [cc.find_library('rte_bus_vdev', required: true)]
+deps += [cc.find_library('dl', required: true)]
 
 if dpdk_version.version_compare('<20.11.0')
 deps += [cc.find_library('rte_pmd_ring', required: true)]

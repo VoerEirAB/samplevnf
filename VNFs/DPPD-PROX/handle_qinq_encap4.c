@@ -377,18 +377,18 @@ static inline void restore_cpe(struct cpe_pkt *packet, struct cpe_data *table, _
 #ifdef USE_QINQ
         struct qinq_hdr *pqinq = &packet->qinq_hdr;
 	rte_memcpy(pqinq, &qinq_proto, sizeof(struct qinq_hdr));
-	(*(uint64_t *)(&pqinq->d_addr)) = table->mac_port_8bytes;
+	(*(uint64_t *)(&pqinq->dst_addr)) = table->mac_port_8bytes;
 	/* set source as well now */
-	*((uint64_t *)(&pqinq->s_addr)) = *((uint64_t *)&src_mac[table->mac_port.out_idx]);
+	*((uint64_t *)(&pqinq->src_addr)) = *((uint64_t *)&src_mac[table->mac_port.out_idx]);
 	pqinq->svlan.vlan_tci = table->qinq_svlan;
 	pqinq->cvlan.vlan_tci = table->qinq_cvlan;
 	pqinq->svlan.eth_proto = qinq_tag;
 	pqinq->cvlan.eth_proto = ETYPE_VLAN;
 	pqinq->ether_type = ETYPE_IPv4;
 #else
-	(*(uint64_t *)(&packet->ether_hdr.d_addr)) = table->mac_port_8bytes;
+	(*(uint64_t *)(&packet->ether_hdr.dst_addr)) = table->mac_port_8bytes;
 	/* set source as well now */
-	*((uint64_t *)(&packet->ether_hdr.s_addr)) = *((uint64_t *)&src_mac[table->mac_port.out_idx]);
+	*((uint64_t *)(&packet->ether_hdr.src_addr)) = *((uint64_t *)&src_mac[table->mac_port.out_idx]);
 	packet->ether_hdr.ether_type = ETYPE_IPv4;
 
 	packet->ipv4_hdr.dst_addr = rte_bswap32(10 << 24 | rte_bswap16(table->qinq_svlan) << 12 | rte_bswap16(table->qinq_cvlan));

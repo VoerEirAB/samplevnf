@@ -410,8 +410,8 @@ static inline uint8_t handle_ipv6_decap(struct task_ipv6_decap* ptask, struct rt
 	pip4 = (prox_rte_ipv4_hdr *)(peth + 1);
 
         // Restore Ethernet header
-        prox_rte_ether_addr_copy(&ptask->base.src_mac, &peth->s_addr);
-        prox_rte_ether_addr_copy(&ptask->dst_mac, &peth->d_addr);
+        prox_rte_ether_addr_copy(&ptask->base.src_mac, &peth->src_addr);
+        prox_rte_ether_addr_copy(&ptask->dst_mac, &peth->dst_addr);
         peth->ether_type = ETYPE_IPv4;
 
 #ifdef GEN_DECAP_IPV6_TO_IPV4_CKSUM
@@ -459,8 +459,8 @@ static inline uint8_t handle_ipv6_encap(struct task_ipv6_encap* ptask, struct rt
 	peth = (prox_rte_ether_hdr *)rte_pktmbuf_prepend(rx_mbuf, extra_space);
 
 	// Ethernet Header
-	prox_rte_ether_addr_copy(&ptask->base.src_mac, &peth->s_addr);
-	prox_rte_ether_addr_copy(&tun_dest->dst_mac, &peth->d_addr);
+	prox_rte_ether_addr_copy(&ptask->base.src_mac, &peth->src_addr);
+	prox_rte_ether_addr_copy(&tun_dest->dst_mac, &peth->dst_addr);
 	peth->ether_type = ETYPE_IPv6;
 
 	// Set up IPv6 Header

@@ -249,7 +249,7 @@ static void init_task_esp_enc(struct task_base *tbase, struct task_args *targ)
 	if (targ->flags & TASK_ARG_DST_MAC_SET){
 		memcpy(&task->dst_mac, &targ->edaddr, sizeof(task->dst_mac));
 		plog_info("TASK_ARG_DST_MAC_SET ("MAC_BYTES_FMT")\n", MAC_BYTES(task->dst_mac.addr_bytes));
-		//prox_rte_ether_addr_copy(&ptask->dst_mac, &peth->d_addr);
+		//prox_rte_ether_addr_copy(&ptask->dst_mac, &peth->dst_addr);
 		//rte_memcpy(hdr, task->src_dst_mac, sizeof(task->src_dst_mac));
 	}
 }
@@ -347,7 +347,7 @@ static void init_task_esp_dec(struct task_base *tbase, struct task_args *targ)
 	if (targ->flags & TASK_ARG_DST_MAC_SET){
 		memcpy(&task->dst_mac, &targ->edaddr, sizeof(task->dst_mac));
 		plog_info("TASK_ARG_DST_MAC_SET ("MAC_BYTES_FMT")\n", MAC_BYTES(task->dst_mac.addr_bytes));
-		//prox_rte_ether_addr_copy(&ptask->dst_mac, &peth->d_addr);
+		//prox_rte_ether_addr_copy(&ptask->dst_mac, &peth->dst_addr);
 		//rte_memcpy(hdr, task->src_dst_mac, sizeof(task->src_dst_mac));
 	}
 
@@ -391,8 +391,8 @@ static inline uint8_t handle_esp_ah_enc(struct task_esp_enc *task, struct rte_mb
 
 	const int extra_space = sizeof(prox_rte_ipv4_hdr) + sizeof(struct prox_esp_hdr) + CIPHER_IV_LENGTH_AES_CBC;
 
-	prox_rte_ether_addr src_mac = peth->s_addr;
-	prox_rte_ether_addr dst_mac = peth->d_addr;
+	prox_rte_ether_addr src_mac = peth->src_addr;
+	prox_rte_ether_addr dst_mac = peth->dst_addr;
 	uint32_t src_addr = pip4->src_addr;
 	uint32_t dst_addr = pip4->dst_addr;
 	uint8_t ttl = pip4->time_to_live;
@@ -405,12 +405,12 @@ static inline uint8_t handle_esp_ah_enc(struct task_esp_enc *task, struct rte_mb
 	peth->ether_type = ETYPE_IPv4;
 #if 0
 	//send it back
-	prox_rte_ether_addr_copy(&dst_mac, &peth->s_addr);
-	prox_rte_ether_addr_copy(&src_mac, &peth->d_addr);
+	prox_rte_ether_addr_copy(&dst_mac, &peth->src_addr);
+	prox_rte_ether_addr_copy(&src_mac, &peth->dst_addr);
 #else
-	prox_rte_ether_addr_copy(&task->local_mac, &peth->s_addr);
-	//prox_rte_ether_addr_copy(&dst_mac, &peth->d_addr);//IS: dstmac should be rewritten by arp
-	prox_rte_ether_addr_copy(&task->dst_mac, &peth->d_addr);
+	prox_rte_ether_addr_copy(&task->local_mac, &peth->src_addr);
+	//prox_rte_ether_addr_copy(&dst_mac, &peth->dst_addr);//IS: dstmac should be rewritten by arp
+	prox_rte_ether_addr_copy(&task->dst_mac, &peth->dst_addr);
 #endif
 
 	pip4 = (prox_rte_ipv4_hdr *)(peth + 1);
@@ -529,19 +529,19 @@ static inline uint8_t handle_esp_ah_dec(struct task_esp_dec *task, struct rte_mb
 static inline void do_ipv4_swap(struct task_esp_dec *task, struct rte_mbuf *mbuf)
 {
 	prox_rte_ether_hdr *peth = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
-	prox_rte_ether_addr src_mac = peth->s_addr;
-	prox_rte_ether_addr dst_mac = peth->d_addr;
+	prox_rte_ether_addr src_mac = peth->src_addr;
+	prox_rte_ether_addr dst_mac = peth->dst_addr;
 	uint32_t src_ip, dst_ip;
 
 	prox_rte_ipv4_hdr* pip4 = (prox_rte_ipv4_hdr *)(peth + 1);
 	src_ip = pip4->src_addr;
 	dst_ip = pip4->dst_addr;
 
-	//peth->s_addr = dst_mac;
-	peth->d_addr = src_mac;//should be replaced by arp
+	//peth->src_addr = dst_mac;
+	peth->dst_addr = src_mac;//should be replaced by arp
 	pip4->src_addr = dst_ip;
 	pip4->dst_addr = src_ip;
-	prox_rte_ether_addr_copy(&task->local_mac, &peth->s_addr);
+	prox_rte_ether_addr_copy(&task->local_mac, &peth->src_addr);
 }
 
 static inline uint8_t handle_esp_ah_dec_finish(struct task_esp_dec *task, struct rte_mbuf *mbuf)
@@ -575,8 +575,8 @@ static inline uint8_t handle_esp_ah_dec_finish(struct task_esp_dec *task, struct
 #if 0
 	do_ipv4_swap(task, mbuf);
 #else
-	prox_rte_ether_addr_copy(&task->local_mac, &peth->s_addr);
-	prox_rte_ether_addr_copy(&task->dst_mac, &peth->d_addr);
+	prox_rte_ether_addr_copy(&task->local_mac, &peth->src_addr);
+	prox_rte_ether_addr_copy(&task->dst_mac, &peth->dst_addr);
 	//rte_memcpy(peth, task->dst_mac, sizeof(task->dst_mac));
 #endif
 	prox_ip_cksum(mbuf, pip4, sizeof(prox_rte_ether_hdr), sizeof(prox_rte_ipv4_hdr), 1);
@@ -612,8 +612,8 @@ static inline uint8_t handle_esp_ah_dec_finish2(struct task_esp_dec *task, struc
 	do_ipv4_swap(task, mbuf);
 #else
 	prox_rte_ether_hdr *peth = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
-	prox_rte_ether_addr_copy(&task->local_mac, &peth->s_addr);
-	prox_rte_ether_addr_copy(&task->dst_mac, &peth->d_addr);
+	prox_rte_ether_addr_copy(&task->local_mac, &peth->src_addr);
+	prox_rte_ether_addr_copy(&task->dst_mac, &peth->dst_addr);
 	//rte_memcpy(peth, task->dst_mac, sizeof(task->dst_mac));
 #endif
 

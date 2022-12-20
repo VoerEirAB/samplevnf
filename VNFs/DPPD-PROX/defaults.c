@@ -50,7 +50,7 @@
 static const struct rte_eth_conf default_port_conf = {
 	.rxmode = {
 		.mq_mode        = 0,
-		.max_rx_pkt_len = PROX_MTU + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN
+		.max_lro_pkt_size = PROX_MTU + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN
 	},
 	.rx_adv_conf = {
 		.rss_conf = {

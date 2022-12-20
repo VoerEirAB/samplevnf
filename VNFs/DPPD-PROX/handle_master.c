@@ -351,9 +351,9 @@ static inline void build_icmp_reply_message(struct task_base *tbase, struct rte_
 	key.port = mbuf->port;
 	prox_rte_ether_hdr *hdr = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
 	prox_rte_ether_addr dst_mac;
-	prox_rte_ether_addr_copy(&hdr->s_addr, &dst_mac);
-	prox_rte_ether_addr_copy(&hdr->d_addr, &hdr->s_addr);
-	prox_rte_ether_addr_copy(&dst_mac, &hdr->d_addr);
+	prox_rte_ether_addr_copy(&hdr->src_addr, &dst_mac);
+	prox_rte_ether_addr_copy(&hdr->dst_addr, &hdr->src_addr);
+	prox_rte_ether_addr_copy(&dst_mac, &hdr->dst_addr);
 	prox_rte_ipv4_hdr *ip_hdr = (prox_rte_ipv4_hdr *)(hdr + 1);
 	key.ip = ip_hdr->dst_addr;
 	ip_hdr->dst_addr = ip_hdr->src_addr;
@@ -689,7 +689,7 @@ static inline void handle_na(struct task_base *tbase, struct rte_mbuf *mbuf, pro
 	} else {
 		// entry found for this IP
 		uint16_t nb_requests = task->external_ip6_table[ret].nb_requests;
-		//memcpy(&hdr->d_addr.addr_bytes, &task->external_ip6_table[ret].mac, sizeof(prox_rte_ether_addr));
+		//memcpy(&hdr->dst_addr.addr_bytes, &task->external_ip6_table[ret].mac, sizeof(prox_rte_ether_addr));
 		// If we receive a request from multiple task for the same IP, then we update all tasks
 		if (task->external_ip6_table[ret].nb_requests) {
 			rte_mbuf_refcnt_set(mbuf, nb_requests);

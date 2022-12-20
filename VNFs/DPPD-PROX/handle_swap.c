@@ -77,18 +77,18 @@ static void write_src_and_dst_mac(struct task_swap *task, struct rte_mbuf *mbuf)
 		hdr = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
 		if (unlikely((task->flags & TASK_ARG_SRC_MAC_SET) == 0)) {
 			/* dst mac will be used as src mac */
-			prox_rte_ether_addr_copy(&hdr->d_addr, &mac);
+			prox_rte_ether_addr_copy(&hdr->dst_addr, &mac);
 		}
 
 		if (unlikely(task->flags & TASK_ARG_DST_MAC_SET))
-			prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[0], &hdr->d_addr);
+			prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[0], &hdr->dst_addr);
 		else
-			prox_rte_ether_addr_copy(&hdr->s_addr, &hdr->d_addr);
+			prox_rte_ether_addr_copy(&hdr->src_addr, &hdr->dst_addr);
 
 		if (likely(task->flags & TASK_ARG_SRC_MAC_SET)) {
-			prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[6], &hdr->s_addr);
+			prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[6], &hdr->src_addr);
 		} else {
-			prox_rte_ether_addr_copy(&mac, &hdr->s_addr);
+			prox_rte_ether_addr_copy(&mac, &hdr->src_addr);
 		}
 	}
 }
@@ -104,9 +104,9 @@ static inline void build_icmp_reply_message(struct task_base *tbase, struct rte_
 	struct task_swap *task = (struct task_swap *)tbase;
 	prox_rte_ether_hdr *hdr = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
 	prox_rte_ether_addr dst_mac;
-	prox_rte_ether_addr_copy(&hdr->s_addr, &dst_mac);
-	prox_rte_ether_addr_copy(&hdr->d_addr, &hdr->s_addr);
-	prox_rte_ether_addr_copy(&dst_mac, &hdr->d_addr);
+	prox_rte_ether_addr_copy(&hdr->src_addr, &dst_mac);
+	prox_rte_ether_addr_copy(&hdr->dst_addr, &hdr->src_addr);
+	prox_rte_ether_addr_copy(&dst_mac, &hdr->dst_addr);
 	prox_rte_ipv4_hdr *ip_hdr = (prox_rte_ipv4_hdr *)(hdr + 1);
 	ip_hdr->dst_addr = ip_hdr->src_addr;
 	ip_hdr->src_addr = task->local_ipv4;
@@ -125,8 +125,8 @@ static inline void build_igmp_message(struct task_base *tbase, struct rte_mbuf *
         rte_pktmbuf_data_len(mbuf) = 46;
         init_mbuf_seg(mbuf);
 
-        prox_rte_ether_addr_copy(&dst_mac, &hdr->d_addr);
-	prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[6], &hdr->s_addr);
+        prox_rte_ether_addr_copy(&dst_mac, &hdr->dst_addr);
+	prox_rte_ether_addr_copy((prox_rte_ether_addr *)&task->src_dst_mac[6], &hdr->src_addr);
 	hdr->ether_type = ETYPE_IPv4;
 
 	prox_rte_ipv4_hdr *ip_hdr = (prox_rte_ipv4_hdr *)(hdr + 1);

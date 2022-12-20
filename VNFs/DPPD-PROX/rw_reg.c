@@ -14,7 +14,7 @@
 // limitations under the License.
 */
 
-#include <rte_ethdev.h>
+#include "/opt/dpdk/lib/ethdev/ethdev_driver.h"
 #include "rw_reg.h"
 
 int read_reg(uint8_t port_id, uint32_t addr, uint32_t *reg)

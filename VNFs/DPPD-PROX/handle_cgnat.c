@@ -129,8 +129,8 @@ void task_cgnat_dump_private_hash(struct task_nat *task)
 static void set_l2(struct task_nat *task, struct rte_mbuf *mbuf, uint8_t nh_idx)
 {
 	prox_rte_ether_hdr *peth = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
-	*((uint64_t *)(&peth->d_addr)) = task->next_hops[nh_idx].mac_port_8bytes;
-	*((uint64_t *)(&peth->s_addr)) = task->src_mac[task->next_hops[nh_idx].mac_port.out_idx];
+	*((uint64_t *)(&peth->dst_addr)) = task->next_hops[nh_idx].mac_port_8bytes;
+	*((uint64_t *)(&peth->src_addr)) = task->src_mac[task->next_hops[nh_idx].mac_port.out_idx];
 }
 
 static uint8_t route_ipv4(struct task_nat *task, struct rte_mbuf *mbuf)

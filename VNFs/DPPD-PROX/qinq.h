@@ -31,8 +31,8 @@ struct vlans {
 };
 
 struct qinq_hdr {
-	prox_rte_ether_addr  d_addr;
-	prox_rte_ether_addr  s_addr;
+	prox_rte_ether_addr  dst_addr;
+	prox_rte_ether_addr  src_addr;
 	struct my_vlan_hdr svlan;
 	struct my_vlan_hdr cvlan;
 	uint16_t ether_type;

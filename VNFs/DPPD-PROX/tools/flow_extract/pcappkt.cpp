@@ -101,8 +101,8 @@ struct ether_addr {
 } __attribute__((__packed__));
 
 struct ether_hdr {
-	struct ether_addr d_addr; /**< Destination address. */
-	struct ether_addr s_addr; /**< Source address. */
+	struct ether_addr dst_addr; /**< Destination address. */
+	struct ether_addr src_addr; /**< Source address. */
 	uint16_t ether_type;      /**< Frame type. */
 } __attribute__((__packed__));
 

@@ -128,7 +128,7 @@ static inline uint8_t handle_qinq_decap6(struct task_qinq_decap6 *task, struct r
 	PROX_ASSERT(pqinq);
 	pqinq->ether_type = ETYPE_IPv6;
 	// Dest MAC addresses
-	prox_rte_ether_addr_copy(&task->edaddr, &pqinq->d_addr);
+	prox_rte_ether_addr_copy(&task->edaddr, &pqinq->dst_addr);
 	return 0;
 }
 

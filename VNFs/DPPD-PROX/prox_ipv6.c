@@ -143,8 +143,8 @@ void build_router_advertisement(struct rte_mbuf *mbuf, prox_rte_ether_addr *s_ad
 	init_mbuf_seg(mbuf);
 	mbuf->ol_flags &= ~(PKT_TX_IP_CKSUM|PKT_TX_UDP_CKSUM);  // Software calculates the checksum
 
-	memcpy(peth->d_addr.addr_bytes, &prox_cfg.all_nodes_mac_addr, sizeof(prox_rte_ether_addr));
-	memcpy(peth->s_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
+	memcpy(peth->dst_addr.addr_bytes, &prox_cfg.all_nodes_mac_addr, sizeof(prox_rte_ether_addr));
+	memcpy(peth->src_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
 
 	prox_rte_ipv6_hdr *ipv6_hdr = prox_set_vlan_ipv6(peth, vlan);
 	ipv6_hdr->vtc_flow = 0x00000060;
@@ -193,8 +193,8 @@ void build_router_sollicitation(struct rte_mbuf *mbuf, prox_rte_ether_addr *s_ad
 	init_mbuf_seg(mbuf);
 	mbuf->ol_flags &= ~(PKT_TX_IP_CKSUM|PKT_TX_UDP_CKSUM);  // Software calculates the checksum
 
-	memcpy(peth->d_addr.addr_bytes, &prox_cfg.all_routers_mac_addr, sizeof(prox_rte_ether_addr));
-	memcpy(peth->s_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
+	memcpy(peth->dst_addr.addr_bytes, &prox_cfg.all_routers_mac_addr, sizeof(prox_rte_ether_addr));
+	memcpy(peth->src_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
 
 	prox_rte_ipv6_hdr *ipv6_hdr = prox_set_vlan_ipv6(peth, vlan);
 	ipv6_hdr->vtc_flow = 0x00000060;
@@ -227,8 +227,8 @@ void build_neighbour_sollicitation(struct rte_mbuf *mbuf, prox_rte_ether_addr *s
 	init_mbuf_seg(mbuf);
 	mbuf->ol_flags &= ~(PKT_TX_IP_CKSUM|PKT_TX_UDP_CKSUM);  // Software calculates the checksum
 
-	memcpy(peth->d_addr.addr_bytes, &mac_dst, sizeof(prox_rte_ether_addr));
-	memcpy(peth->s_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
+	memcpy(peth->dst_addr.addr_bytes, &mac_dst, sizeof(prox_rte_ether_addr));
+	memcpy(peth->src_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
 
 	prox_rte_ipv6_hdr *ipv6_hdr = prox_set_vlan_ipv6(peth, vlan);
 
@@ -268,15 +268,15 @@ void build_neighbour_advertisement(struct task_base *tbase, struct rte_mbuf *mbu
 	prox_rte_ipv6_hdr *ipv6_hdr = prox_set_vlan_ipv6(peth, vlan);
 
 	// If source mac is null, use all_nodes_mac_addr.
-	if ((!sollicited) || (memcmp(peth->s_addr.addr_bytes, &null_addr, sizeof(struct ipv6_addr)) == 0)) {
-		memcpy(peth->d_addr.addr_bytes, &prox_cfg.all_nodes_mac_addr, sizeof(prox_rte_ether_addr));
+	if ((!sollicited) || (memcmp(peth->src_addr.addr_bytes, &null_addr, sizeof(struct ipv6_addr)) == 0)) {
+		memcpy(peth->dst_addr.addr_bytes, &prox_cfg.all_nodes_mac_addr, sizeof(prox_rte_ether_addr));
 		memcpy(ipv6_hdr->dst_addr, &prox_cfg.all_nodes_ipv6_mcast_addr, sizeof(struct ipv6_addr));
 	} else {
-		memcpy(peth->d_addr.addr_bytes, peth->s_addr.addr_bytes, sizeof(prox_rte_ether_addr));
+		memcpy(peth->dst_addr.addr_bytes, peth->src_addr.addr_bytes, sizeof(prox_rte_ether_addr));
 		memcpy(ipv6_hdr->dst_addr, ipv6_hdr->src_addr, sizeof(struct ipv6_addr));
 	}
 
-	memcpy(peth->s_addr.addr_bytes, &task->internal_port_table[port_id].mac, sizeof(prox_rte_ether_addr));
+	memcpy(peth->src_addr.addr_bytes, &task->internal_port_table[port_id].mac, sizeof(prox_rte_ether_addr));
 
 	ipv6_hdr->vtc_flow = 0x00000060;
 	ipv6_hdr->payload_len = rte_cpu_to_be_16(sizeof(struct icmpv6_NA));

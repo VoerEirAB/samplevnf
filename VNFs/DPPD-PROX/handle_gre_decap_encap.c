@@ -274,20 +274,20 @@ static inline uint8_t handle_gre_decap(struct task_gre_decap *task, struct rte_m
 #if 1
 	if (pgre->type == ETYPE_IPv4) {
 		prox_rte_ether_hdr eth = {
-			.d_addr = {.addr_bytes =
+			.dst_addr = {.addr_bytes =
 				   {0x0A, 0x02, 0x0A, 0x0A, 0x00, 0x01}},
-			.s_addr = {.addr_bytes =
+			.src_addr = {.addr_bytes =
 				   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
 			.ether_type = ETYPE_IPv4
 		};
 		uint32_t hip = rte_bswap32(pip->src_addr);
-		eth.s_addr.addr_bytes[2] = (hip >> 24) & 0xFF;
-		eth.s_addr.addr_bytes[3] = (hip >> 16) & 0xFF;
-		eth.s_addr.addr_bytes[4] = (hip >> 8) & 0xFF;
-		eth.s_addr.addr_bytes[5] = (hip) & 0xFF;
+		eth.src_addr.addr_bytes[2] = (hip >> 24) & 0xFF;
+		eth.src_addr.addr_bytes[3] = (hip >> 16) & 0xFF;
+		eth.src_addr.addr_bytes[4] = (hip >> 8) & 0xFF;
+		eth.src_addr.addr_bytes[5] = (hip) & 0xFF;
 		rte_memcpy(peth, &eth, sizeof(prox_rte_ether_hdr));
 	}
-	prox_rte_ether_addr_copy(&peth->s_addr, &key.clt_mac);
+	prox_rte_ether_addr_copy(&peth->src_addr, &key.clt_mac);
 #endif
 
 	data.tsc = rte_rdtsc() + task->cpe_timeout;
@@ -334,7 +334,7 @@ static inline void handle_gre_encap16(struct task_gre_decap *task, struct rte_mb
 {
 	for (uint8_t i = 0; i < n_pkts; ++i) {
 		prox_rte_ether_hdr *peth = rte_pktmbuf_mtod(mbufs[i], prox_rte_ether_hdr *);
-		prox_rte_ether_addr_copy(&peth->d_addr, &task->key[i].clt_mac);
+		prox_rte_ether_addr_copy(&peth->dst_addr, &task->key[i].clt_mac);
 	}
 
 	int32_t hash_index[16];
@@ -371,7 +371,7 @@ static inline uint8_t handle_gre_encap(struct task_gre_decap *task, struct rte_m
 	uint16_t ip_len = rte_be_to_cpu_16(pip->total_length);
 
 	struct cpe_gre_key key;
-	prox_rte_ether_addr_copy(&peth->d_addr, &key.clt_mac);
+	prox_rte_ether_addr_copy(&peth->dst_addr, &key.clt_mac);
 
 #ifdef GRE_TP
 	/* policing enabled */
@@ -407,8 +407,8 @@ static inline uint8_t handle_gre_encap(struct task_gre_decap *task, struct rte_m
 	struct gre_hdr *pgre = (struct gre_hdr *)(pip + 1);
 
 	prox_rte_ether_hdr eth = {
-		.d_addr = {.addr_bytes = {0x0A, 0x0A, 0x0A, 0xC8, 0x00, 0x02}},
-		.s_addr = {.addr_bytes = {0x0A, 0x0A, 0x0A, 0xC8, 0x00, 0x01}},
+		.dst_addr = {.addr_bytes = {0x0A, 0x0A, 0x0A, 0xC8, 0x00, 0x02}},
+		.src_addr = {.addr_bytes = {0x0A, 0x0A, 0x0A, 0xC8, 0x00, 0x01}},
 		.ether_type = ETYPE_IPv4
 	};
 	rte_memcpy(peth, &eth, sizeof(prox_rte_ether_hdr));

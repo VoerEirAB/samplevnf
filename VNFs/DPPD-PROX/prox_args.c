@@ -655,8 +655,8 @@ static int get_port_cfg(unsigned sindex, char *str, void *data)
 			// A frame of 1526 bytes (1500 bytes mtu, 14 bytes hdr, 4 bytes crc and 8 bytes vlan)
 			// should not be considered as a jumbo frame. However rte_ethdev.c considers that
 			// the max_rx_pkt_len for a non jumbo frame is 1518
-			cfg->port_conf.rxmode.max_rx_pkt_len = cfg->mtu + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN;
-			if (cfg->port_conf.rxmode.max_rx_pkt_len > PROX_RTE_ETHER_MAX_LEN) {
+			cfg->port_conf.rxmode.max_lro_pkt_size = cfg->mtu + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN;
+			if (cfg->port_conf.rxmode.max_lro_pkt_size > PROX_RTE_ETHER_MAX_LEN) {
 				cfg->requested_rx_offload |= DEV_RX_OFFLOAD_JUMBO_FRAME;
 			}
 		}
@@ -2302,9 +2302,9 @@ int prox_setup_rte(const char *prog_name)
 	rte_argv[argc] = rte_arg[argc];
 #if RTE_VERSION >= RTE_VERSION_NUM(1,8,0,0)
 	if (prox_cfg.flags & DSF_USE_DUMMY_CPU_TOPO)
-		sprintf(rte_arg[++argc], "--master-lcore=%u", 0);
+		sprintf(rte_arg[++argc], "--main-lcore=%u", 0);
 	else
-		sprintf(rte_arg[++argc], "--master-lcore=%u", prox_cfg.master);
+		sprintf(rte_arg[++argc], "--main-lcore=%u", prox_cfg.master);
 	rte_argv[argc] = rte_arg[argc];
 #else
 	/* For old DPDK versions, the master core had to be the first

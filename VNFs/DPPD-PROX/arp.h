@@ -57,8 +57,8 @@ static inline void build_arp_reply(prox_rte_ether_hdr *ether_hdr, prox_rte_ether
 {
 	uint32_t ip_source = arp->data.spa;
 
-	memcpy(ether_hdr->d_addr.addr_bytes, ether_hdr->s_addr.addr_bytes, sizeof(prox_rte_ether_addr));
-	memcpy(ether_hdr->s_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
+	memcpy(ether_hdr->dst_addr.addr_bytes, ether_hdr->src_addr.addr_bytes, sizeof(prox_rte_ether_addr));
+	memcpy(ether_hdr->src_addr.addr_bytes, s_addr, sizeof(prox_rte_ether_addr));
 
 	arp->data.spa = arp->data.tpa;
 	arp->data.tpa = ip_source;
@@ -93,8 +93,8 @@ static inline void build_arp_request(struct rte_mbuf *mbuf, prox_rte_ether_addr 
 		rte_pktmbuf_data_len(mbuf) = 42;
 	}
 
-	memcpy(&ether_hdr->d_addr.addr_bytes, &mac_bcast, 6);
-	memcpy(&ether_hdr->s_addr.addr_bytes, src_mac, 6);
+	memcpy(&ether_hdr->dst_addr.addr_bytes, &mac_bcast, 6);
+	memcpy(&ether_hdr->src_addr.addr_bytes, src_mac, 6);
 	arp->htype = 0x100,
 	arp->ptype = 0x0008;
 	arp->hlen = 6;

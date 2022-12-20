@@ -227,7 +227,7 @@ static void extract_key_data_arp(struct rte_mbuf* mbuf, struct cpe_key* key, str
 	key->ip = packet->arp.data.spa;
 	key->gre_id = entry->gre_id;
 
-	data->mac_port_8bytes = *((const uint64_t *)(&packet->qinq_hdr.s_addr));
+	data->mac_port_8bytes = *((const uint64_t *)(&packet->qinq_hdr.src_addr));
 	data->qinq_svlan = svlan;
 	data->qinq_cvlan = cvlan;
 #if RTE_VERSION >= RTE_VERSION_NUM(1,8,0,0)
@@ -470,8 +470,8 @@ static inline uint8_t gre_encap_route(uint32_t src_ipv4, struct rte_mbuf *mbuf, 
 	}
 	const uint8_t port_id = task->next_hops[next_hop_index].mac_port.out_idx;
 
-	*((uint64_t *)(&packet->ether_hdr.d_addr)) = task->next_hops[next_hop_index].mac_port_8bytes;
-	*((uint64_t *)(&packet->ether_hdr.s_addr)) = task->src_mac[task->next_hops[next_hop_index].mac_port.out_idx];
+	*((uint64_t *)(&packet->ether_hdr.dst_addr)) = task->next_hops[next_hop_index].mac_port_8bytes;
+	*((uint64_t *)(&packet->ether_hdr.src_addr)) = task->src_mac[task->next_hops[next_hop_index].mac_port.out_idx];
 
 #ifdef MPLS_ROUTING
 	packet->mpls_bytes = task->next_hops[next_hop_index].mpls | 0x00010000; // Set BoS to 1
@@ -520,11 +520,11 @@ static void extract_key_data(struct rte_mbuf* mbuf, struct cpe_key* key, struct 
 	key->gre_id = entry->gre_id;
 
 #ifdef USE_QINQ
-	data->mac_port_8bytes = *((const uint64_t *)(&packet->qinq_hdr.s_addr));
+	data->mac_port_8bytes = *((const uint64_t *)(&packet->qinq_hdr.src_addr));
 	data->qinq_svlan      = packet->qinq_hdr.svlan.vlan_tci & 0xFF0F;
 	data->qinq_cvlan      = packet->qinq_hdr.cvlan.vlan_tci & 0xFF0F;
 #else
-	data->mac_port_8bytes = *((const uint64_t *)(&packet->ether_hdr.s_addr));
+	data->mac_port_8bytes = *((const uint64_t *)(&packet->ether_hdr.src_addr));
 	data->qinq_svlan      = svlan;
 	data->qinq_cvlan      = cvlan;
 #endif

@@ -18,7 +18,7 @@
 #include <stdio.h>
 
 #include <rte_version.h>
-#include <rte_ethdev.h>
+#include "/opt/dpdk/lib/ethdev/ethdev_driver.h"
 #include <rte_cycles.h>
 #include <rte_byteorder.h>
 

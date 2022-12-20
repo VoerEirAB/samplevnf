@@ -251,8 +251,8 @@ struct qinq_packet {
 } __attribute__((packed)) __attribute__((__aligned__(2)));
 
 struct qinq_packet_data {
-	prox_rte_ether_addr  d_addr;
-	prox_rte_ether_addr  s_addr;
+	prox_rte_ether_addr  dst_addr;
+	prox_rte_ether_addr  src_addr;
 	uint64_t qinq;
 } __attribute__((packed)) __attribute__((__aligned__(2)));
 

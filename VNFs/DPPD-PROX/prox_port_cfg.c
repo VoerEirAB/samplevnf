@@ -364,12 +364,11 @@ void init_rte_dev(int use_dummy_devices)
 		port_cfg->max_txq = dev_info.max_tx_queues;
 		port_cfg->max_rxq = dev_info.max_rx_queues;
 		port_cfg->max_rx_pkt_len = dev_info.max_rx_pktlen;
+		port_cfg->min_rx_bufsize = dev_info.min_rx_bufsize;
 		port_cfg->min_tx_desc = dev_info.tx_desc_lim.nb_min;
 		port_cfg->max_tx_desc = dev_info.tx_desc_lim.nb_max;
 		port_cfg->min_rx_desc = dev_info.rx_desc_lim.nb_min;
 		port_cfg->max_rx_desc = dev_info.rx_desc_lim.nb_max;
-		if (!port_cfg->min_rx_bufsize)
-			port_cfg->min_rx_bufsize = dev_info.min_rx_bufsize;
 
 		prox_strncpy(port_cfg->driver_name, dev_info.driver_name, sizeof(port_cfg->driver_name));
 		plog_info("\tPort %u : driver='%s' tx_queues=%d rx_queues=%d\n", port_id, !strcmp(port_cfg->driver_name, "")? "null" : port_cfg->driver_name, port_cfg->max_txq, port_cfg->max_rxq);
@@ -631,10 +630,9 @@ static void init_port(struct prox_port_cfg *port_cfg)
 		plog_info("\t\tPort %u had no RX queues, setting to 1\n", port_id);
 		port_cfg->n_rxq = 1;
 		uint32_t mbuf_size = TX_MBUF_SIZE;
-		if (mbuf_size < port_cfg->min_rx_bufsize + RTE_PKTMBUF_HEADROOM + sizeof(struct rte_mbuf))
-			mbuf_size = port_cfg->min_rx_bufsize + RTE_PKTMBUF_HEADROOM + sizeof(struct rte_mbuf);
-		plog_info("\t\tMbuf Size to create mempool is %u.\n", mbuf_size);
-		plog_info("\t\tMinimum RX Buffer is %u\n", port_cfg->min_rx_bufsize);
+                if (mbuf_size < port_cfg->min_rx_bufsize + RTE_PKTMBUF_HEADROOM + sizeof(struct rte_mbuf))
+                        mbuf_size = port_cfg->min_rx_bufsize + RTE_PKTMBUF_HEADROOM + sizeof(struct rte_mbuf);
+
 		plog_info("\t\tAllocating dummy memory pool on socket %u with %u elements of size %u\n",
 			  port_cfg->socket, port_cfg->n_rxd, mbuf_size);
 		port_cfg->pool[0] = rte_mempool_create(dummy_pool_name, port_cfg->n_rxd, mbuf_size,

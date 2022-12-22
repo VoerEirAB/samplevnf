@@ -740,7 +740,6 @@ static void set_mbuf_size(struct task_args *targ)
 			continue;
 		}
 		port = &prox_port_cfg[if_port];
-		plog_info("\t\tShort name of the port is %s.\n", port->short_name);
 		if (max_frame_size < port->mtu + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN + 2 * PROX_VLAN_TAG_SIZE)
 			max_frame_size = port->mtu + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN + 2 * PROX_VLAN_TAG_SIZE;
 		if (min_buffer_size < port->min_rx_bufsize)

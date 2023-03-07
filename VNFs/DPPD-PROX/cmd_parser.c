@@ -1135,12 +1135,17 @@ static int parse_cmd_start(const char *str, struct input *input)
 static int parse_cmd_stop(const char *str, struct input *input)
 {
 	int task_id = -1;
+        char buf[128];
 
 	if (strncmp(str, "all", 3) == 0) {
 		str += 3;
 		sscanf(str, "%d", &task_id);
 		stop_core_all(task_id);
 		req_refresh();
+		if (input->reply) {
+		    snprintf(buf, sizeof(buf), "Success\n");
+		    input->reply(input, buf, strlen(buf));
+		}
 		return 0;
 	}
 
@@ -1148,6 +1153,10 @@ static int parse_cmd_stop(const char *str, struct input *input)
 	int ret;
 	ret = parse_list_set(cores, str, 64);
 	if (ret < 0) {
+		if (input->reply) {
+		    snprintf(buf, sizeof(buf), "Failure\n");
+		    input->reply(input, buf, strlen(buf));
+		}
 		return -1;
 	}
 	str = strchr(str, ' ');
@@ -1157,7 +1166,10 @@ static int parse_cmd_stop(const char *str, struct input *input)
 	}
 	stop_cores(cores, ret, task_id);
 	req_refresh();
-
+	if (input->reply) {
+		snprintf(buf, sizeof(buf), "Success\n");
+		input->reply(input, buf, strlen(buf));
+	}
 	return 0;
 }
 

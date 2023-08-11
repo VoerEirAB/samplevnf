@@ -17,6 +17,11 @@
 #ifndef _STATS_TASK_H_
 #define _STATS_TASK_H_
 
+#include <rte_common.h>
+#ifndef __rte_cache_aligned
+#include <rte_memory.h>
+#endif
+
 #include <inttypes.h>
 
 #include "clock.h"

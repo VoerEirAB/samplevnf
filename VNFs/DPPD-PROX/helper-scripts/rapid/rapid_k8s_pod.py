@@ -32,6 +32,7 @@ class Pod:
     _name = "pod"
     _namespace = "default"
     _nodeSelector_hostname = None
+    _spec_filename = None
     _last_status = None
     _id = None
     _admin_ip = None
@@ -49,6 +50,7 @@ class Pod:
         self._name = name
         self._namespace = namespace
         self._ssh_client = SSHClient(logger_name = logger_name)
+        self.qat_vf = []
 
     def __del__(self):
         """Destroy POD. Do a cleanup.
@@ -56,10 +58,11 @@ class Pod:
         if self._ssh_client is not None:
             self._ssh_client.disconnect()
 
-    def create_from_yaml(self, file_name):
+    def create_from_yaml(self):
         """Load POD description from yaml file.
         """
-        with open(path.join(path.dirname(__file__), file_name)) as yaml_file:
+        with open(path.join(path.dirname(__file__),
+            self._spec_filename)) as yaml_file:
             self.body = yaml.safe_load(yaml_file)
 
             self.body["metadata"]["name"] = self._name
@@ -67,14 +70,16 @@ class Pod:
             if (self._nodeSelector_hostname is not None):
                 if ("nodeSelector" not in self.body["spec"]):
                     self.body["spec"]["nodeSelector"] = {}
-                self.body["spec"]["nodeSelector"]["kubernetes.io/hostname"] = self._nodeSelector_hostname
+                self.body["spec"]["nodeSelector"]["kubernetes.io/hostname"] = \
+                        self._nodeSelector_hostname
             self._log.debug("Creating POD, body:\n%s" % self.body)
 
             try:
                 self.k8s_CoreV1Api.create_namespaced_pod(body = self.body,
                                                 namespace = self._namespace)
             except client.rest.ApiException as e:
-                self._log.error("Couldn't create POD %s!\n%s\n" % (self._name, e))
+                self._log.error("Couldn't create POD %s!\n%s\n" % (self._name,
+                    e))
 
     def terminate(self):
         """Terminate POD. Close SSH connection.
@@ -138,6 +143,9 @@ class Pod:
     def get_dp_pci_dev(self):
         return self._sriov_vf
 
+    def get_qat_pci_dev(self):
+        return self.qat_vf
+
     def get_id(self):
         return self._id
 
@@ -152,6 +160,28 @@ class Pod:
 
         self._last_status = pod.status.phase
         return self._last_status
+
+    def get_qat_dev(self):
+        """Get qat devices if any, assigned by k8s QAT device plugin.
+        """
+        self._log.info("Checking assigned QAT VF for POD %s" % self._name)
+        ret = self._ssh_client.run_cmd("cat /opt/rapid/k8s_qat_device_plugin_envs")
+        if ret != 0:
+            self._log.error("Failed to check assigned QAT VF!"
+                            "Error %s" % self._ssh_client.get_error())
+            return -1
+
+        cmd_output = self._ssh_client.get_output().decode("utf-8").rstrip()
+
+        if cmd_output:
+            self._log.debug("Before: Using QAT VF %s" % self.qat_vf)
+            self._log.debug("Environment variable %s" % cmd_output)
+            for line in cmd_output.splitlines():
+                self.qat_vf.append(line.split("=")[1])
+            self._log.debug("Using QAT VF %s" % self.qat_vf)
+        else:
+            self._log.debug("No QAT devices for this pod")
+            self.qat_vf = None
 
     def get_sriov_dev_mac(self):
         """Get assigned by k8s SRIOV network device plugin SRIOV VF devices.
@@ -173,8 +203,24 @@ class Pod:
         self._sriov_vf = cmd_output.split(",")[0]
         self._log.debug("Using first SRIOV VF %s" % self._sriov_vf)
 
-        self._log.info("Getting MAC address for assigned SRIOV VF %s" % self._sriov_vf)
-        self._ssh_client.run_cmd("sudo /opt/rapid/port_info_app -n 4 -w %s" % self._sriov_vf)
+        # find DPDK version
+        self._log.info("Checking DPDK version for POD %s" % self._name)
+        ret = self._ssh_client.run_cmd("cat /opt/rapid/dpdk_version")
+        if ret != 0:
+            self._log.error("Failed to check DPDK version"
+                            "Error %s" % self._ssh_client.get_error())
+            return -1
+        dpdk_version = self._ssh_client.get_output().decode("utf-8").rstrip()
+        self._log.debug("DPDK version %s" % dpdk_version)
+        if (dpdk_version >= '20.11.0'):
+            allow_parameter = 'allow'
+        else:
+            allow_parameter = 'pci-whitelist'
+
+        self._log.info("Getting MAC address for assigned SRIOV VF %s" % \
+                self._sriov_vf)
+        self._ssh_client.run_cmd("sudo /opt/rapid/port_info_app -n 4 \
+                --{} {}".format(allow_parameter, self._sriov_vf))
         if ret != 0:
             self._log.error("Failed to get MAC address!"
                             "Error %s" % self._ssh_client.get_error())
@@ -203,6 +249,11 @@ class Pod:
         """Set hostname on which POD will be executed.
         """
         self._nodeSelector_hostname = hostname
+
+    def set_spec_file_name(self, file_name):
+        """Set pod spec filename.
+        """
+        self._spec_filename = file_name
 
     def set_ssh_credentials(self, user, rsa_private_key):
         """Set SSH credentials for the SSH connection to the POD.

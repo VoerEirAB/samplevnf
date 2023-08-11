@@ -797,6 +797,7 @@ static int lua_to_hash_nat(struct task_args *targ, struct lua_State *L, enum lua
 		.key_len = sizeof(struct private_key),
 		.hash_func = rte_hash_crc,
 		.hash_func_init_val = 0,
+		.socket_id = socket,
 	};
 	plogx_info("hash table name = %s\n", hash_params.name);
 	struct private_key private_key;
@@ -964,7 +965,7 @@ static void init_task_nat(struct task_base *tbase, struct task_args *targ)
 
 	struct prox_port_cfg *port = find_reachable_port(targ);
 	if (port) {
-		task->offload_crc = port->requested_tx_offload & (DEV_TX_OFFLOAD_IPV4_CKSUM | DEV_TX_OFFLOAD_UDP_CKSUM);
+		task->offload_crc = port->requested_tx_offload & (RTE_ETH_TX_OFFLOAD_IPV4_CKSUM | RTE_ETH_TX_OFFLOAD_UDP_CKSUM);
 	}
 }
 

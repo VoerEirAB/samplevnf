@@ -18,6 +18,9 @@
 #include <stdio.h>
 
 #include <rte_version.h>
+#if RTE_VERSION >= RTE_VERSION_NUM(21,11,0,0)
+#include <ethdev_driver.h>	// Please configure DPDK with meson option -Denable_driver_sdk=true
+#endif
 #include <rte_ethdev.h>
 #include <rte_cycles.h>
 #include <rte_byteorder.h>
@@ -289,16 +292,16 @@ static void nic_read_stats(uint8_t port_id)
 			   dropped by the nic". Note that in case CRC
 			   is stripped on ixgbe, the CRC bytes are not
 			   counted. */
-#if defined (DEV_RX_OFFLOAD_CRC_STRIP)
-			if (prox_port_cfg[port_id].requested_rx_offload & DEV_RX_OFFLOAD_CRC_STRIP)
+#if defined (RTE_ETH_RX_OFFLOAD_CRC_STRIP)
+			if (prox_port_cfg[port_id].requested_rx_offload & RTE_ETH_RX_OFFLOAD_CRC_STRIP)
 				stats->rx_bytes = eth_stat.ibytes +
 					(24 * eth_stat.ipackets - 20 * (eth_stat.ierrors + eth_stat.imissed));
 			else
 				stats->rx_bytes = eth_stat.ibytes +
 					(20 * eth_stat.ipackets - 20 * (eth_stat.ierrors + eth_stat.imissed));
 #else
-#if defined (DEV_RX_OFFLOAD_KEEP_CRC)
-			if (prox_port_cfg[port_id].requested_rx_offload & DEV_RX_OFFLOAD_KEEP_CRC)
+#if defined (RTE_ETH_RX_OFFLOAD_KEEP_CRC)
+			if (prox_port_cfg[port_id].requested_rx_offload & RTE_ETH_RX_OFFLOAD_KEEP_CRC)
 				stats->rx_bytes = eth_stat.ibytes +
 					(20 * eth_stat.ipackets - 20 * (eth_stat.ierrors + eth_stat.imissed));
 			else

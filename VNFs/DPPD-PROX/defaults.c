@@ -50,7 +50,11 @@
 static const struct rte_eth_conf default_port_conf = {
 	.rxmode = {
 		.mq_mode        = 0,
-		.max_rx_pkt_len = PROX_MTU + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN
+#if RTE_VERSION < RTE_VERSION_NUM(21,11,0,0)
+		.max_rx_pkt_len = PROX_MTU + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN,
+#else
+		.mtu = PROX_MTU,
+#endif
 	},
 	.rx_adv_conf = {
 		.rss_conf = {
@@ -226,9 +230,9 @@ void set_port_defaults(void)
 
 		// CRC_STRIP becoming the default behavior in DPDK 18.08, and
 		// DEV_RX_OFFLOAD_CRC_STRIP define has been deleted
-#if defined (DEV_RX_OFFLOAD_CRC_STRIP)
-		prox_port_cfg[i].requested_rx_offload = DEV_RX_OFFLOAD_CRC_STRIP;
+#if defined (RTE_ETH_RX_OFFLOAD_CRC_STRIP)
+		prox_port_cfg[i].requested_rx_offload = RTE_ETH_RX_OFFLOAD_CRC_STRIP;
 #endif
-		prox_port_cfg[i].requested_tx_offload = DEV_TX_OFFLOAD_IPV4_CKSUM | DEV_TX_OFFLOAD_UDP_CKSUM;
+		prox_port_cfg[i].requested_tx_offload = RTE_ETH_TX_OFFLOAD_IPV4_CKSUM | RTE_ETH_TX_OFFLOAD_UDP_CKSUM;
 	}
 }

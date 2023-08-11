@@ -20,6 +20,7 @@ from rapid_log import RapidLog
 from prox_ctrl import prox_ctrl
 import os
 import re
+import uuid
 
 class RapidMachine(object):
     """
@@ -41,8 +42,11 @@ class RapidMachine(object):
         while True:
             ip_key = 'dp_ip{}'.format(index)
             mac_key = 'dp_mac{}'.format(index)
-            if ip_key in machine_params.keys() and mac_key in machine_params.keys():
-                dp_port = {'ip': machine_params[ip_key], 'mac' : machine_params[mac_key]}
+            if ip_key in machine_params.keys():
+                if mac_key in machine_params.keys():
+                    dp_port = {'ip': machine_params[ip_key], 'mac' : machine_params[mac_key]}
+                else:
+                    dp_port = {'ip': machine_params[ip_key], 'mac' : None}
                 self.dp_ports.append(dict(dp_port))
                 self.dpdk_port_index.append(index - 1)
                 index += 1
@@ -77,7 +81,17 @@ class RapidMachine(object):
     def read_cpuset(self):
         """Read list of cpus on which we allowed to execute
         """
-        cmd = 'cat /sys/fs/cgroup/cpuset/cpuset.cpus'
+        cpu_set_file = '/sys/fs/cgroup/cpuset.cpus'
+        cmd = 'test -e {0} && echo exists'.format(cpu_set_file)
+        if (self._client.run_cmd(cmd).decode().rstrip()):
+            cmd = 'cat {}'.format(cpu_set_file)
+        else:
+            cpu_set_file = '/sys/fs/cgroup/cpuset/cpuset.cpus'
+            cmd = 'test -e {0} && echo exists'.format(cpu_set_file)
+            if (self._client.run_cmd(cmd).decode().rstrip()):
+                cmd = 'cat {}'.format(cpu_set_file)
+            else:
+                RapidLog.critical('{Cannot determine cpuset')
         cpuset_cpus = self._client.run_cmd(cmd).decode().rstrip()
         RapidLog.debug('{} ({}): Allocated cpuset: {}'.format(self.name, self.ip, cpuset_cpus))
         self.cpu_mapping = self.expand_list_format(cpuset_cpus)
@@ -116,6 +130,11 @@ class RapidMachine(object):
             RapidLog.debug('{} ({}): cores {} remapped to {}'.format(self.name, self.ip, self.machine_params['cores'], cpus_remapped))
             self.machine_params['cores'] = cpus_remapped
 
+        if 'altcores' in self.machine_params.keys():
+            cpus_remapped = self.remap_cpus(self.machine_params['altcores'])
+            RapidLog.debug('{} ({}): altcores {} remapped to {}'.format(self.name, self.ip, self.machine_params['altcores'], cpus_remapped))
+            self.machine_params['altcores'] = cpus_remapped
+
     def devbind(self):
         # Script to bind the right network interface to the poll mode driver
         for index, dp_port in enumerate(self.dp_ports, start = 1):
@@ -137,20 +156,47 @@ class RapidMachine(object):
                 LuaFile.write('local_ip{}="{}"\n'.format(index, dp_port['ip']))
                 LuaFile.write('local_hex_ip{}=convertIPToHex(local_ip{})\n'.format(index, index))
             if self.vim in ['kubernetes']:
-                LuaFile.write("eal=\"--file-prefix %s --pci-whitelist %s\"\n" % (self.name, self.machine_params['dp_pci_dev']))
+                cmd = 'cat /opt/rapid/dpdk_version'
+                dpdk_version = self._client.run_cmd(cmd).decode().rstrip()
+                if (dpdk_version >= '20.11.0'):
+                    allow_parameter = 'allow'
+                else:
+                    allow_parameter = 'pci-whitelist'
+                eal_line = 'eal=\"--file-prefix {}{} --{} {} --force-max-simd-bitwidth=512'.format(
+                        self.name, str(uuid.uuid4()), allow_parameter,
+                        self.machine_params['dp_pci_dev'])
+                looking_for_qat = True
+                index = 0
+                while (looking_for_qat):
+                    if  'qat_pci_dev{}'.format(index) in self.machine_params:
+                        eal_line += ' --{} {}'.format(allow_parameter,
+                            self.machine_params['qat_pci_dev{}'.format(index)])
+                        index += 1
+                    else:
+                        looking_for_qat = False
+                        eal_line += '"\n'
+                LuaFile.write(eal_line)
             else:
                 LuaFile.write("eal=\"\"\n")
             if 'mcore' in self.machine_params.keys():
-                LuaFile.write('mcore="%s"\n'% ','.join(map(str, self.machine_params['mcore'])))
+                LuaFile.write('mcore="%s"\n'% ','.join(map(str,
+                    self.machine_params['mcore'])))
             if 'cores' in self.machine_params.keys():
-                LuaFile.write('cores="%s"\n'% ','.join(map(str, self.machine_params['cores'])))
+                LuaFile.write('cores="%s"\n'% ','.join(map(str,
+                    self.machine_params['cores'])))
+            if 'altcores' in self.machine_params.keys():
+                LuaFile.write('altcores="%s"\n'% ','.join(map(str,
+                    self.machine_params['altcores'])))
             if 'ports' in self.machine_params.keys():
-                LuaFile.write('ports="%s"\n'% ','.join(map(str, self.machine_params['ports'])))
+                LuaFile.write('ports="%s"\n'% ','.join(map(str,
+                    self.machine_params['ports'])))
             if 'dest_ports' in self.machine_params.keys():
                 for index, dest_port in enumerate(self.machine_params['dest_ports'], start = 1):
                     LuaFile.write('dest_ip{}="{}"\n'.format(index, dest_port['ip']))
                     LuaFile.write('dest_hex_ip{}=convertIPToHex(dest_ip{})\n'.format(index, index))
-                    LuaFile.write('dest_hex_mac{}="{}"\n'.format(index , dest_port['mac'].replace(':',' ')))
+                    if dest_port['mac']:
+                        LuaFile.write('dest_hex_mac{}="{}"\n'.format(index ,
+                            dest_port['mac'].replace(':',' ')))
             if 'gw_vm' in self.machine_params.keys():
                 for index, gw_ip in enumerate(self.machine_params['gw_ips'],
                         start = 1):

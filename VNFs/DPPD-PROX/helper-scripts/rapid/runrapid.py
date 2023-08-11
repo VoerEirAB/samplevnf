@@ -59,12 +59,20 @@ class RapidTestManager(object):
 
     def run_tests(self, test_params):
         test_params = RapidConfigParser.parse_config(test_params)
-        RapidLog.debug(test_params)
         monitor_gen = monitor_sut = False
         background_machines = []
         sut_machine = gen_machine = None
         configonly = test_params['configonly']
+        machine_names = []
+        machine_counter = {}
         for machine_params in test_params['machines']:
+            if machine_params['name'] not in machine_names:
+                machine_names.append(machine_params['name'])
+                machine_counter[machine_params['name']] = 1
+            else:
+                machine_counter[machine_params['name']] += 1
+                machine_params['name'] = '{}_{}'.format(machine_params['name'],
+                        machine_counter[machine_params['name']])
             if 'gencores' in machine_params.keys():
                 machine = RapidGeneratorMachine(test_params['key'],
                         test_params['user'], test_params['password'],
@@ -94,6 +102,7 @@ class RapidTestManager(object):
                         if machine_params['prox_socket']:
                             sut_machine = machine
             self.machines.append(machine)
+        RapidLog.debug(test_params)
         try:
             prox_executor = concurrent.futures.ThreadPoolExecutor(max_workers=len(self.machines))
             self.future_to_prox = {prox_executor.submit(machine.start_prox): machine for machine in self.machines}

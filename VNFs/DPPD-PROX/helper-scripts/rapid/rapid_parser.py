@@ -63,12 +63,6 @@ class RapidConfigParser(object):
         test_params['user'] = config.get('ssh', 'user')
         if config.has_option('ssh', 'key'):
             test_params['key'] = config.get('ssh', 'key')
-            if test_params['user'] in ['rapid']:
-                if test_params['key'] != 'rapid_rsa_key':
-                    RapidLog.debug(("Key file {} for user {} overruled by key file:"
-                            " rapid_rsa_key").format(test_params['key'],
-                            test_params['user']))
-                    test_params['key'] = 'rapid_rsa_key'
         else:
             test_params['key'] = None
         if config.has_option('ssh', 'password'):
@@ -143,7 +137,8 @@ class RapidConfigParser(object):
             for option in options:
                 if option in ['prox_socket','prox_launch_exit','monitor']:
                     machine[option] = testconfig.getboolean(section, option)
-                elif option in ['mcore', 'cores', 'gencores','latcores']:
+                elif option in ['mcore', 'cores', 'gencores', 'latcores',
+                        'altcores']:
                     machine[option] = ast.literal_eval(testconfig.get(
                         section, option))
                 elif option in ['bucket_size_exp']:
@@ -170,10 +165,13 @@ class RapidConfigParser(object):
                 while True: 
                     dp_ip_key = 'dp_ip{}'.format(index)
                     dp_mac_key = 'dp_mac{}'.format(index)
-                    if dp_ip_key in machines[int(machine['dest_vm'])-1].keys() and \
-                            dp_mac_key in machines[int(machine['dest_vm'])-1].keys():
-                        dp_port = {'ip': machines[int(machine['dest_vm'])-1][dp_ip_key],
-                                'mac' : machines[int(machine['dest_vm'])-1][dp_mac_key]}
+                    if dp_ip_key in machines[int(machine['dest_vm'])-1].keys():
+                        if dp_mac_key in machines[int(machine['dest_vm'])-1].keys():
+                            dp_port = {'ip': machines[int(machine['dest_vm'])-1][dp_ip_key],
+                                    'mac' : machines[int(machine['dest_vm'])-1][dp_mac_key]}
+                        else:
+                            dp_port = {'ip': machines[int(machine['dest_vm'])-1][dp_ip_key],
+                                    'mac' : None}
                         dp_ports.append(dict(dp_port))
                         index += 1
                     else:

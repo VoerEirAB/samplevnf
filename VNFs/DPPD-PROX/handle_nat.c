@@ -123,6 +123,7 @@ static int lua_to_hash_nat(struct lua_State *L, enum lua_place from, const char 
 		.key_len = sizeof(ip_from),
 		.hash_func = rte_hash_crc,
 		.hash_func_init_val = 0,
+		.socket_id = socket,
 	};
 
 	ret_hash = rte_hash_create(&hash_params);
@@ -171,7 +172,7 @@ static void init_task_nat(struct task_base *tbase, struct task_args *targ)
 	PROX_PANIC(ret != 0, "Failed to load NAT table from lua:\n%s\n", get_lua_to_errors());
 	struct prox_port_cfg *port = find_reachable_port(targ);
 	if (port) {
-		task->offload_crc = port->requested_tx_offload & (DEV_TX_OFFLOAD_IPV4_CKSUM | DEV_TX_OFFLOAD_UDP_CKSUM);
+		task->offload_crc = port->requested_tx_offload & (RTE_ETH_TX_OFFLOAD_IPV4_CKSUM | RTE_ETH_TX_OFFLOAD_UDP_CKSUM);
 	}
 
 }

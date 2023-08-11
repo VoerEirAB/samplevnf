@@ -17,6 +17,11 @@
 #ifndef _LCONF_H_
 #define _LCONF_H_
 
+#include <rte_common.h>
+#ifndef __rte_cache_aligned
+#include <rte_memory.h>
+#endif
+
 #include "task_init.h"
 #include "stats.h"
 
@@ -100,8 +105,8 @@ static inline void lconf_flush_all_queues(struct lcore_cfg *lconf)
 
 	for (uint8_t task_id = 0; task_id < lconf->n_tasks_all; ++task_id) {
 		task = lconf->tasks_all[task_id];
-		if (!(task->flags & FLAG_TX_FLUSH) || (task->flags & FLAG_NEVER_FLUSH)) {
-			task->flags |= FLAG_TX_FLUSH;
+		if (!(task->flags & TBASE_FLAG_TX_FLUSH) || (task->flags & TBASE_FLAG_NEVER_FLUSH)) {
+			task->flags |= TBASE_FLAG_TX_FLUSH;
 			continue;
 		}
 		lconf->flush_queues[task_id](task);

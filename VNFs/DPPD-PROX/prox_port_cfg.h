@@ -21,8 +21,12 @@
 #include <rte_ether.h>
 #include <rte_ethdev.h>
 #include <rte_version.h>
+#if RTE_VERSION >= RTE_VERSION_NUM(22,11,0,0)
+#include <bus_pci_driver.h>	// Please configure DPDK with meson option -Denable_driver_sdk=true
+#else
 #if RTE_VERSION >= RTE_VERSION_NUM(17,11,0,0)
 #include <rte_bus_pci.h>
+#endif
 #endif
 #include <rte_pci.h>
 
@@ -57,7 +61,7 @@ struct prox_port_cfg {
 	uint32_t  mtu;
 	enum addr_type    type;
 	prox_rte_ether_addr eth_addr;    /* port MAC address */
-	char names[PROX_MAX_VLAN_TAGS][MAX_NAME_SIZE];
+	char names[PROX_MAX_VLAN_TAGS][MAX_NAME_BUFFER_SIZE];
 	char vdev[MAX_NAME_SIZE];
 	char short_name[MAX_NAME_SIZE];
 	char driver_name[MAX_NAME_SIZE];

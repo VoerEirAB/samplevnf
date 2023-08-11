@@ -32,7 +32,7 @@ class K8sDeployment:
     """
     LOG_FILE_NAME = "createrapidk8s.log"
     SSH_PRIVATE_KEY = "./rapid_rsa_key"
-    SSH_USER = "centos"
+    SSH_USER = "rapid"
 
     POD_YAML_TEMPLATE_FILE_NAME = "pod-rapid.yaml"
 
@@ -111,7 +111,7 @@ class K8sDeployment:
                 pod_name = self._create_config.get(
                     "POD%d" % i, "name")
             else:
-                pod_name = "pod-rapid-%d" % i
+                pod_name = "prox-pod-%d" % i
 
             # Search for POD hostname
             if self._create_config.has_option("POD%d" % i,
@@ -120,6 +120,14 @@ class K8sDeployment:
                     "POD%d" % i, "nodeSelector_hostname")
             else:
                 pod_nodeselector_hostname = None
+
+            # Search for POD spec
+            if self._create_config.has_option("POD%d" % i,
+                                              "spec_file_name"):
+                pod_spec_file_name = self._create_config.get(
+                    "POD%d" % i, "spec_file_name")
+            else:
+                pod_spec_file_name = K8sDeployment.POD_YAML_TEMPLATE_FILE_NAME
 
             # Search for POD dataplane static IP
             if self._create_config.has_option("POD%d" % i,
@@ -139,6 +147,7 @@ class K8sDeployment:
 
             pod = Pod(pod_name, self._namespace)
             pod.set_nodeselector(pod_nodeselector_hostname)
+            pod.set_spec_file_name(pod_spec_file_name)
             pod.set_dp_ip(pod_dp_ip)
             pod.set_dp_subnet(pod_dp_subnet)
             pod.set_id(i)
@@ -157,7 +166,7 @@ class K8sDeployment:
         # Create PODs using template from yaml file
         for pod in self._pods:
             self._log.info("Creating POD %s...", pod.get_name())
-            pod.create_from_yaml(K8sDeployment.POD_YAML_TEMPLATE_FILE_NAME)
+            pod.create_from_yaml()
 
         # Wait for PODs to start
         for pod in self._pods:
@@ -167,6 +176,7 @@ class K8sDeployment:
         for pod in self._pods:
             pod.set_ssh_credentials(K8sDeployment.SSH_USER, K8sDeployment.SSH_PRIVATE_KEY)
             pod.get_sriov_dev_mac()
+            pod.get_qat_dev()
 
     def save_runtime_config(self, config_file_name):
         self._log.info("Saving config %s for runrapid script...",
@@ -203,6 +213,10 @@ class K8sDeployment:
                                      "dp_mac1", pod.get_dp_mac())
             self._runtime_config.set("M%d" % pod.get_id(),
                                      "dp_pci_dev", pod.get_dp_pci_dev())
+            if (pod.get_qat_pci_dev()):
+                for qat_index, qat_device in enumerate(pod.get_qat_pci_dev()):
+                    self._runtime_config.set("M%d" % pod.get_id(),
+                                           "qat_pci_dev%d" % qat_index, qat_device)
             self._runtime_config.set("M%d" % pod.get_id(),
                                      "dp_ip1", pod.get_dp_ip() + "/" +
                                      pod.get_dp_subnet())

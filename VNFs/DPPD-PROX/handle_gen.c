@@ -13,6 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
+
+#include <rte_common.h>
+#ifndef __rte_cache_aligned
+#include <rte_memory.h>
+#endif
+
 #include <rte_mbuf.h>
 #include <pcap.h>
 #include <string.h>
@@ -1775,7 +1781,7 @@ static void init_task_gen(struct task_base *tbase, struct task_args *targ)
 	struct prox_port_cfg *port = find_reachable_port(targ);
 	// TODO: check that all reachable ports have the same mtu...
 	if (port) {
-		task->cksum_offload = port->requested_tx_offload & (DEV_TX_OFFLOAD_IPV4_CKSUM | DEV_TX_OFFLOAD_UDP_CKSUM);
+		task->cksum_offload = port->requested_tx_offload & (RTE_ETH_TX_OFFLOAD_IPV4_CKSUM | RTE_ETH_TX_OFFLOAD_UDP_CKSUM);
 		task->port = port;
 		task->max_frame_size = port->mtu + PROX_RTE_ETHER_HDR_LEN + 2 * PROX_VLAN_TAG_SIZE;
 	} else {
@@ -1900,6 +1906,7 @@ static void init_task_gen(struct task_base *tbase, struct task_args *targ)
 		.key_len = sizeof(union ipv4_5tuple_host),
 		.hash_func = rte_hash_crc,
 		.hash_func_init_val = 0,
+		.socket_id = task->socket_id,
 	};
 	plog_info("\t\thash table name = %s\n", hash_params.name);
 	task->flow_id_table = rte_hash_create(&hash_params);

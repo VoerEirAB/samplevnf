@@ -17,7 +17,8 @@
 
 function save_k8s_envs()
 {
-	printenv | grep "PCIDEVICE_INTEL_COM" > /opt/rapid/k8s_sriov_device_plugin_envs
+	printenv | grep "PCIDEVICE" > /opt/rapid/k8s_sriov_device_plugin_envs
+	printenv | grep "QAT[0-9]" > /opt/rapid/k8s_qat_device_plugin_envs
 }
 
 function create_tun()
@@ -34,6 +35,9 @@ create_tun
 touch /opt/rapid/system_ready_for_rapid
 
 # Start SSH server in background
-/usr/sbin/sshd
+echo "mkdir -p /var/run/sshd" >> /etc/rc.local
+service ssh start
 
-exec sleep infinity
+echo "rapid ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+sleep infinity

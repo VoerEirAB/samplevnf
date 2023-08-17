@@ -665,7 +665,14 @@ static int get_port_cfg(unsigned sindex, char *str, void *data)
 				cfg->requested_rx_offload |= RTE_ETH_RX_OFFLOAD_JUMBO_FRAME;
 		}
 	}
-
+	else if (STR_EQ(str, "min rx buf")) {
+		uint32_t val;
+		if (parse_int(&val, pkey)){
+			plog_err("Unable to parse content of min rx buf: %s\n", pkey);
+			return -1;
+		}
+		cfg->min_rx_bufsize = val;
+    }
 	else if (STR_EQ(str, "rss")) {
 		uint32_t val;
 		if (parse_bool(&val, pkey)) {

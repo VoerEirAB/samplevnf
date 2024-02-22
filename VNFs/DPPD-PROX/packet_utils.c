@@ -405,7 +405,7 @@ int write_ip6_dst_mac(struct task_base *tbase, struct rte_mbuf *mbuf, struct ipv
 					// NDP not sent since a long time, send NDP
 
 					l3->optimized_arp_table[idx].arp_ndp_retransmit_timeout = tsc + l3->arp_ndp_retransmit_timeout * hz / 1000;
-					plog_dbg("VE: transmit timeout is %lu\n", l3->optimized_arp_table[idx].arp_ndp_retransmit_timeout);
+					plog_dbg("VE: reachable timeout is %lu\n", l3->optimized_arp_table[idx].reachable_timeout);
 					plog_dbg("VE: tsc value is %lu\n", tsc);
 					if (tsc < l3->optimized_arp_table[idx].reachable_timeout) {
 						// MAC still valid => also send mbuf

@@ -1954,6 +1954,23 @@ static struct task_init task_init_gen_l3 = {
 	.size = sizeof(struct task_gen)
 };
 
+static struct task_init task_init_gen_ndp = {
+	.mode_str = "gen",
+	.sub_mode_str = "ndp",
+	.init = init_task_gen,
+	.handle = handle_gen_bulk,
+	.start = start,
+	.early_init = init_task_gen_early,
+#ifdef SOFT_CRC
+	// For SOFT_CRC, no offload is needed. If both NOOFFLOADS and NOMULTSEGS flags are set the
+	// vector mode is used by DPDK, resulting (theoretically) in higher performance.
+	.flag_features = TASK_FEATURE_NEVER_DISCARDS | TASK_FEATURE_NO_RX | TASK_FEATURE_TXQ_FLAGS_NOOFFLOADS,
+#else
+	.flag_features = TASK_FEATURE_NEVER_DISCARDS | TASK_FEATURE_NO_RX,
+#endif
+	.size = sizeof(struct task_gen)
+};
+
 /* This mode uses time stamps in the pcap file */
 static struct task_init task_init_gen_pcap = {
 	.mode_str = "gen",
@@ -1975,4 +1992,5 @@ __attribute__((constructor)) static void reg_task_gen(void)
 	reg_task(&task_init_gen);
 	reg_task(&task_init_gen_l3);
 	reg_task(&task_init_gen_pcap);
+	reg_task(&task_init_gen_ndp);
 }

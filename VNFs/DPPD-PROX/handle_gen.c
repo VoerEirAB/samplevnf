@@ -1989,6 +1989,7 @@ static struct task_init task_init_gen_pcap = {
 
 __attribute__((constructor)) static void reg_task_gen(void)
 {
+	plog_info("cons init for prox");
 	reg_task(&task_init_gen);
 	reg_task(&task_init_gen_l3);
 	reg_task(&task_init_gen_pcap);

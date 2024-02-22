@@ -364,7 +364,7 @@ struct task_base *init_task_struct(struct task_args *targ)
 	offset += sizeof(struct task_base_aux);
 
 	tbase->handle_bulk = t->handle;
-	plog_info("May or may not be working in NDP mode rn")
+	plog_info("May or may not be working in NDP mode rn");
 	if (targ->flags & (TASK_ARG_L3|TASK_ARG_NDP)) {
 		plog_info("\t\tTask (%d,%d) configured in L3/NDP mode\n", targ->lconf->id, targ->id);
 		tbase->l3.ctrl_plane_ring = targ->ctrl_plane_ring;

@@ -1992,5 +1992,5 @@ __attribute__((constructor)) static void reg_task_gen(void)
 	reg_task(&task_init_gen);
 	reg_task(&task_init_gen_l3);
 	reg_task(&task_init_gen_pcap);
-	// reg_task(&task_init_gen_ndp);
+	reg_task(&task_init_gen_ndp);
 }

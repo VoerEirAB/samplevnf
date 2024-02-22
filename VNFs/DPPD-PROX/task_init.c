@@ -375,6 +375,7 @@ struct task_base *init_task_struct(struct task_args *targ)
 				plog_info("VE: doing some L3+NDP shit\n");
 				tbase->tx_pkt = tx_pkt_l3;
 				task_init_l3(tbase, targ);
+				
 				tbase->tx_pkt = tx_pkt_ndp;
 				task_init_l3(tbase, targ);
 			} else if (targ->flags & TASK_ARG_NDP) {

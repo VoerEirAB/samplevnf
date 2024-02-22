@@ -826,7 +826,7 @@ static int get_core_cfg(unsigned sindex, char *str, void *data)
 				targ->mapping[vals[i]] = i;
 			}
 		}
-
+        plog_dbg("VE:Setting nb_txports to %d\n", ret);
 		targ->nb_txports = ret;
 
 		return 0;
@@ -848,6 +848,7 @@ static int get_core_cfg(unsigned sindex, char *str, void *data)
 		}
 
 		targ->nb_worker_threads = cts->n_elems;
+        plog_dbg("VE: in conditon - tx cores from routing table - setting targ->nb_txrings to %d\n", targ->nb_txrings);
 		targ->nb_txrings = cts->n_elems;
 
 		if (targ->nb_txrings > MAX_RINGS_PER_TASK) {
@@ -884,6 +885,7 @@ static int get_core_cfg(unsigned sindex, char *str, void *data)
 			return -1;
 		}
 
+        plog_dbg("VE: in conditon - tx cores from cpe table - setting targ->nb_txrings to %d\n", targ->nb_txrings);
 		targ->nb_txrings = cts->n_elems;
 
 		if (ret != targ->nb_txrings) {

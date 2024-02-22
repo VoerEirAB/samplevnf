@@ -173,17 +173,29 @@ static size_t init_rx_tx_rings_ports(struct task_args *targ, struct task_base *t
 		}
 	}
 	else {
+        plog_dbg("VE: in  else rx tx rings port func\n");
 		if (targ->nb_rxports == 1) {
-			if (targ->flags & TASK_ARG_L3)
-				tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX)? rx_pkt_hw1_multi_l3 : rx_pkt_hw1_l3;
-			else if (targ->flags & TASK_ARG_NDP)
-				tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX)? rx_pkt_hw1_multi_ndp : rx_pkt_hw1_ndp;
-			else
-				tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX)? rx_pkt_hw1_multi : rx_pkt_hw1;
+            plog_dbg("VE: in  rx tx rings port func\n");
+            if (targ->flags & TASK_ARG_L3) {
+                plog_dbg("VE: in  TASK ARG L3 func\n");
+                tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX) ? rx_pkt_hw1_multi_l3
+                                                                                         : rx_pkt_hw1_l3;
+            }
+			else if (targ->flags & TASK_ARG_NDP) {
+                plog_dbg("VE: in  TASK ARG NDP func\n");
+                tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX) ? rx_pkt_hw1_multi_ndp
+                                                                                         : rx_pkt_hw1_ndp;
+            }
+			else{
+                plog_dbg("VE: in  TASK ARG else func\n");
+                tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX) ? rx_pkt_hw1_multi
+                                                                                         : rx_pkt_hw1;
+            }
 			tbase->rx_params_hw1.rx_pq.port =  targ->rx_port_queue[0].port;
 			tbase->rx_params_hw1.rx_pq.queue = targ->rx_port_queue[0].queue;
 		}
 		else {
+            plog_dbg("VE: in nested else rx tx rings port func\n");
 			PROX_ASSERT((targ->nb_rxports != 0) || (targ->task_init->flag_features & TASK_FEATURE_NO_RX));
 			if (targ->flags & TASK_ARG_L3)
 				tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX)? rx_pkt_hw_multi_l3 : rx_pkt_hw_l3;
@@ -335,6 +347,7 @@ static size_t init_rx_tx_rings_ports(struct task_args *targ, struct task_base *t
 	}
 
 	if (targ->nb_txrings == 0 && targ->nb_txports == 0) {
+        plog_dbg("VE: setting tx pkt to tx_pkt_drop_all\n");
 		tbase->tx_pkt = tx_pkt_drop_all;
 	}
 
@@ -364,7 +377,7 @@ struct task_base *init_task_struct(struct task_args *targ)
 	offset += sizeof(struct task_base_aux);
 
 	tbase->handle_bulk = t->handle;
-
+	plog_info("VE: May or may not be working in NDP mode rn\n");
 	if (targ->flags & (TASK_ARG_L3|TASK_ARG_NDP)) {
 		plog_info("\t\tTask (%d,%d) configured in L3/NDP mode\n", targ->lconf->id, targ->id);
 		tbase->l3.ctrl_plane_ring = targ->ctrl_plane_ring;
@@ -372,9 +385,16 @@ struct task_base *init_task_struct(struct task_args *targ)
 			tbase->aux->tx_pkt_l2 = tbase->tx_pkt;
 			tbase->aux->tx_ctrlplane_pkt = targ->nb_txrings ? tx_ctrlplane_sw : tx_ctrlplane_hw;
 			if (targ->flags & TASK_ARG_L3) {
+				plog_dbg("VE: doing some L3 shit\n");
 				tbase->tx_pkt = tx_pkt_l3;
 				task_init_l3(tbase, targ);
+
+
+				// tbase->tx_pkt = tx_pkt_ndp;
+				// task_init_l3(tbase, targ);
 			} else if (targ->flags & TASK_ARG_NDP) {
+				plog_dbg("VE: doing some NDP shit\n");
+				
 				tbase->tx_pkt = tx_pkt_ndp;
 				task_init_l3(tbase, targ);
 			}

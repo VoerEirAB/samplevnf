@@ -1172,6 +1172,7 @@ static int handle_gen_bulk(struct task_base *tbase, struct rte_mbuf **mbufs, uin
 	// If we failed to send some packets, we need to do some clean-up:
 
 	if (unlikely(ret)) {
+		plog_dbg("VE gen fail ho gya\n");
 		// We need re-use the packets indexes not being sent
 		// Hence non-sent packets will not be considered as lost by the receiver when it looks at
 		// packet ids. This should also increase the percentage of packets used for latency measurements
@@ -1777,6 +1778,7 @@ static void init_task_gen(struct task_base *tbase, struct task_args *targ)
 {
 	struct task_gen *task = (struct task_gen *)tbase;
 	task->socket_id = rte_lcore_to_socket_id(targ->lconf->id);
+	plog_dbg("VE Submode: %s\n", targ->sub_mode_str);
 
 	task->packet_id_pos = targ->packet_id_pos;
 
@@ -1954,6 +1956,23 @@ static struct task_init task_init_gen_l3 = {
 	.size = sizeof(struct task_gen)
 };
 
+static struct task_init task_init_gen_ndp = {
+	.mode_str = "gen",
+	.sub_mode_str = "ndp",
+	.init = init_task_gen,
+	.handle = handle_gen_bulk,
+	.start = start,
+	.early_init = init_task_gen_early,
+#ifdef SOFT_CRC
+	// For SOFT_CRC, no offload is needed. If both NOOFFLOADS and NOMULTSEGS flags are set the
+	// vector mode is used by DPDK, resulting (theoretically) in higher performance.
+	.flag_features = TASK_FEATURE_NEVER_DISCARDS | TASK_FEATURE_NO_RX | TASK_FEATURE_TXQ_FLAGS_NOOFFLOADS,
+#else
+	.flag_features = TASK_FEATURE_NEVER_DISCARDS | TASK_FEATURE_NO_RX,
+#endif
+	.size = sizeof(struct task_gen)
+};
+
 /* This mode uses time stamps in the pcap file */
 static struct task_init task_init_gen_pcap = {
 	.mode_str = "gen",
@@ -1972,7 +1991,9 @@ static struct task_init task_init_gen_pcap = {
 
 __attribute__((constructor)) static void reg_task_gen(void)
 {
+	plog_info("cons init for prox");
 	reg_task(&task_init_gen);
 	reg_task(&task_init_gen_l3);
 	reg_task(&task_init_gen_pcap);
+	reg_task(&task_init_gen_ndp);
 }

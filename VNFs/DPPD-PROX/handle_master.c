@@ -483,6 +483,8 @@ static inline void handle_unknown_ip6(struct task_base *tbase, struct rte_mbuf *
 
 	// As timers are not handled by master, we might send an NS request even if one was just sent
 	// (and not yet answered) by another task
+	plog_dbg("building soli"IPv6_BYTES_FMT"\n", IPv6_BYTES(ip_dst->bytes));
+
 	build_neighbour_sollicitation(mbuf, &task->internal_port_table[port_id].mac, ip_dst, ip_src, vlan);
 	tx_ring(tbase, ring, SEND_NDP_FROM_MASTER, mbuf);
 }
@@ -832,9 +834,11 @@ static inline void handle_message(struct task_base *tbase, struct rte_mbuf *mbuf
 			tx_drop(mbuf);
 			break;
 		}
+		plog_dbg("ipv4 things happening. currently in handle_message" );
 		handle_unknown_ip(tbase, mbuf);
 		break;
 	case IP6_REQ_MAC_TO_MASTER:
+		plog_dbg("ipv6 things happening. currently in handle_message" );
 		handle_unknown_ip6(tbase, mbuf);
 		break;
 	case NDP_PKT_FROM_NET_TO_MASTER:

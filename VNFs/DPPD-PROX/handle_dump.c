@@ -61,6 +61,7 @@ static int handle_dump_bulk(struct task_base *tbase, struct rte_mbuf **mbufs, ui
 
 	for (uint16_t j = ofs; j < n_pkts; ++j)
 		rte_pktmbuf_free(mbufs[j]);
+    plog_dbg("in handle_dump_bulk. inc dropped pkt stat");
 	TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, n_pkts - ofs);
 	return n_pkts;
 }

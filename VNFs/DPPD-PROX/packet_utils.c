@@ -168,8 +168,11 @@ static void send_router_sollicitation(struct task_base *tbase, struct task_args 
 
 	ret = rte_mempool_get(tbase->l3.arp_nd_pool, (void **)&mbuf);
 	if (likely(ret == 0)) {
+		plog_dbg("port id is %d", port_id);
 		mbuf->port = port_id;
+		plog_dbg("following arguments are being sent - 2nd - '%s', 3rd = '%s', 4th= '%d'", prox_port_cfg[port_id].eth_addr.addr_bytes, "dummmy", prox_port_cfg[port_id].vlan_tags[0]);
 		build_router_sollicitation(mbuf, &prox_port_cfg[port_id].eth_addr, &targ->local_ipv6, prox_port_cfg[port_id].vlan_tags[0]);
+		plog_dbg("value of out is %d", out);
 		tbase->aux->tx_ctrlplane_pkt(tbase, &mbuf, 1, &out);
 		TASK_STATS_ADD_TX_NON_DP(&tbase->aux->stats, 1);
 	} else {
@@ -338,8 +341,10 @@ int write_dst_mac(struct task_base *tbase, struct rte_mbuf *mbuf, uint32_t *ip_d
 		int ret = rte_hash_lookup(l3->ip_hash, (const void *)ip_dst);
 		if (unlikely(ret < 0)) {
 			// IP not found, try to send an ARP
+			plog_dbg("ip not found!!");
 			return add_key_and_send_arp(l3->ip_hash, ip_dst, &l3->arp_table[ret], tsc, hz, l3->arp_ndp_retransmit_timeout, MAX_HOP_INDEX, time);
 		} else {
+			plog_dbg("ip found!!");
 			// IP has been found
 			return update_mac_and_send_mbuf(&l3->arp_table[ret], mac, tsc, hz, l3->arp_ndp_retransmit_timeout, time);
 		}
@@ -363,7 +368,12 @@ int write_ip6_dst_mac(struct task_base *tbase, struct rte_mbuf *mbuf, struct ipv
 		return SEND_MBUF;
 	}
 	struct l3_base *l3 = &(tbase->l3);
+        // plog_info("hiiiiiiii iamma die now");
+	plog_dbg("VE: local and global  be "IPv6_BYTES_FMT" using "IPv6_BYTES_FMT" (local)\n", IPv6_BYTES(l3->local_ipv6.bytes), IPv6_BYTES(l3->global_ipv6.bytes));
+	plog_dbg("VE:  target is "IPv6_BYTES_FMT" \n", IPv6_BYTES(ip_dst->bytes));
+	// plog_info("l3 local ipv6 value ip_dst :'%d'\n ", *(uint64_t *)(&l3->local_ipv6));
 
+	// plog_info("l3 global ipv6 value ip_dst :'%d'\n ", *(uint64_t *)(&l3->global_ipv6));
 	// Configure source IP
 	if (*(uint64_t *)(&l3->local_ipv6) == *(uint64_t *)ip_dst) {
 		// Same prefix as local -> use local
@@ -395,7 +405,10 @@ int write_ip6_dst_mac(struct task_base *tbase, struct rte_mbuf *mbuf, struct ipv
 					return SEND_MBUF;
 				} else if (tsc > l3->optimized_arp_table[idx].arp_ndp_retransmit_timeout) {
 					// NDP not sent since a long time, send NDP
+
 					l3->optimized_arp_table[idx].arp_ndp_retransmit_timeout = tsc + l3->arp_ndp_retransmit_timeout * hz / 1000;
+					plog_dbg("VE: reachable timeout is %lu\n", l3->optimized_arp_table[idx].reachable_timeout);
+					plog_dbg("VE: tsc value is %lu\n", tsc);
 					if (tsc < l3->optimized_arp_table[idx].reachable_timeout) {
 						// MAC still valid => also send mbuf
 						plog_dbg("Valid MAC found but NDP retransmit timeout => send packet and NDP\n");
@@ -530,7 +543,8 @@ void task_init_l3(struct task_base *tbase, struct task_args *targ)
 		tbase->l3.arp_ndp_retransmit_timeout = DEFAULT_ARP_UPDATE_TIME;
 }
 
-void task_start_l3(struct task_base *tbase, struct task_args *targ)
+void
+task_start_l3(struct task_base *tbase, struct task_args *targ)
 {
 	const int socket_id = rte_lcore_to_socket_id(targ->lconf->id);
 	const int NB_ARP_ND_MBUF = 1024;
@@ -828,7 +842,9 @@ void handle_ctrl_plane_pkts(struct task_base *tbase, struct rte_mbuf **mbufs, ui
 			break;
 		case MAC_INFO_FROM_MASTER_FOR_IPV6:
 			ip6 = ctrl_ring_get_ipv6_addr(mbufs[j]);
-			uint64_t data = ctrl_ring_get_data(mbufs[j]);
+			hdr = rte_pktmbuf_mtod(mbufs[j], prox_rte_ether_hdr *);
+			// this data variable is pretty useless and parse the packets wrongly.
+			//uint64_t data = ctrl_ring_get_data(mbufs[j]);
 
 			if (l3->n_pkts < 4) {
 				// Few packets tracked - should be faster to loop through them thean using a hash table
@@ -839,16 +855,24 @@ void handle_ctrl_plane_pkts(struct task_base *tbase, struct rte_mbuf **mbufs, ui
 				}
 				if (idx < l3->n_pkts) {
 					// IP found; this is a reply for one of our requests!
-					memcpy(&l3->optimized_arp_table[idx].mac, &data, sizeof(prox_rte_ether_addr));
+					memcpy(&l3->optimized_arp_table[idx].mac, &(hdr->s_addr), sizeof(prox_rte_ether_addr));
+					//memcpy(&l3->optimized_arp_table[idx].mac, &data, sizeof(prox_rte_ether_addr));
 					l3->optimized_arp_table[idx].reachable_timeout = tsc + l3->reachable_timeout * hz / 1000;
+					plog_dbg("VE inside fewer packets\n");
+					plog_dbg("\tVE Populated MAC entry for IP "IPv6_BYTES_FMT" MAC "MAC_BYTES_FMT"\n",
+					    IPv6_BYTES(l3->optimized_arp_table[idx].ip6.bytes), MAC_BYTES(l3->optimized_arp_table[idx].mac.addr_bytes));
 				}
 			} else {
 				int ret = rte_hash_add_key(l3->ip6_hash, (const void *)ip6);
 				if (ret < 0) {
 					plogx_info("Unable add ip "IPv6_BYTES_FMT" in mac_hash\n", IPv6_BYTES(ip6->bytes));
 				} else {
-					memcpy(&l3->arp_table[ret].mac, &data, sizeof(prox_rte_ether_addr));
+					memcpy(&l3->arp_table[ret].mac, &(hdr->s_addr), sizeof(prox_rte_ether_addr));
+					//memcpy(&l3->arp_table[ret].mac, &data, sizeof(prox_rte_ether_addr));
 					l3->arp_table[ret].reachable_timeout = tsc + l3->reachable_timeout * hz / 1000;
+					plog_dbg("VE inside hash flow packets\n");
+					plog_dbg("\tVE Populated MAC entry for IP "IPv6_BYTES_FMT" MAC "MAC_BYTES_FMT"\n",
+					    IPv6_BYTES(ip6), MAC_BYTES(l3->arp_table[ret].mac.addr_bytes));
 				}
 			}
 			tx_drop(mbufs[j]);

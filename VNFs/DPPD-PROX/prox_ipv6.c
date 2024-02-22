@@ -18,15 +18,19 @@
 #include "handle_master.h"
 #include "prox_cfg.h"
 #include "prox_ipv6.h"
+// #include "defines.h"
+
 
 struct ipv6_addr null_addr = {{0}};
 char ip6_str[40]; // 8 blocks of 2 bytes (4 char) + 1x ":" between blocks
 
 void set_mcast_mac_from_ipv6(prox_rte_ether_addr *mac, struct ipv6_addr *ipv6_addr)
 {
+	plog_dbg("in mcast infoi\n");
 	mac->addr_bytes[0] = 0x33;
 	mac->addr_bytes[1] = 0x33;
 	memcpy(((uint32_t *)&mac->addr_bytes[2]), (uint32_t *)(&ipv6_addr->bytes[12]), sizeof(uint32_t));
+	mac->addr_bytes[2] = 0xFF;
 }
 
 // Note that this function is not Mthread safe and would result in garbage if called simultaneously from multiple threads
@@ -202,6 +206,7 @@ void build_router_sollicitation(struct rte_mbuf *mbuf, prox_rte_ether_addr *s_ad
 	ipv6_hdr->proto = ICMPv6;
 	ipv6_hdr->hop_limits = 255;
 	memcpy(ipv6_hdr->src_addr, ipv6_s_addr, sizeof(struct ipv6_addr));	// 0 = "Unspecified address" if unknown
+	// plog_info("value of mcast addr is %d \n", prox_cfg.all_routers_ipv6_mcast_addr);
 	memcpy(ipv6_hdr->dst_addr, &prox_cfg.all_routers_ipv6_mcast_addr, sizeof(struct ipv6_addr));
 
 	struct icmpv6_RS *router_sollicitation = (struct icmpv6_RS *)(ipv6_hdr + 1);
@@ -222,6 +227,7 @@ void build_neighbour_sollicitation(struct rte_mbuf *mbuf, prox_rte_ether_addr *s
 {
 	prox_rte_ether_hdr *peth = rte_pktmbuf_mtod(mbuf, prox_rte_ether_hdr *);
 	prox_rte_ether_addr mac_dst;
+	// plog_info("VE: about to make mcast. dest is "IPv6_BYTES_FMT" \n", IPv6_BYTES(dst->bytes));
 	set_mcast_mac_from_ipv6(&mac_dst, dst);
 
 	init_mbuf_seg(mbuf);
@@ -237,6 +243,8 @@ void build_neighbour_sollicitation(struct rte_mbuf *mbuf, prox_rte_ether_addr *s
 	ipv6_hdr->proto = ICMPv6;
 	ipv6_hdr->hop_limits = 255;
 	memcpy(ipv6_hdr->src_addr, src, 16);
+	// plog_info("VE:  dest is "IPv6_BYTES_FMT" \n", IPv6_BYTES(dst->bytes));
+	// plog_info("destination is "IPv6_BYTES_FMT" \n", IPv6_BYTES(dst->bytes));
 	memcpy(ipv6_hdr->dst_addr, dst, 16);
 
 	struct icmpv6_NS *neighbour_sollicitation = (struct icmpv6_NS *)(ipv6_hdr + 1);

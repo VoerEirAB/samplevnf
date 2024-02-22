@@ -372,15 +372,16 @@ struct task_base *init_task_struct(struct task_args *targ)
 			tbase->aux->tx_pkt_l2 = tbase->tx_pkt;
 			tbase->aux->tx_ctrlplane_pkt = targ->nb_txrings ? tx_ctrlplane_sw : tx_ctrlplane_hw;
 			if (targ->flags & TASK_ARG_L3) {
-				plog_info("VE: doing some L3+NDP shit\n");
+				plog_info("VE: doing some L3 shit\n");
 				tbase->tx_pkt = tx_pkt_l3;
 				task_init_l3(tbase, targ);
 
-				
-				tbase->tx_pkt = tx_pkt_ndp;
-				task_init_l3(tbase, targ);
+
+				// tbase->tx_pkt = tx_pkt_ndp;
+				// task_init_l3(tbase, targ);
 			} else if (targ->flags & TASK_ARG_NDP) {
 				plog_info("VE: doing some NDP shit\n");
+				
 				tbase->tx_pkt = tx_pkt_ndp;
 				task_init_l3(tbase, targ);
 			}

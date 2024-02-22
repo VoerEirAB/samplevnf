@@ -906,8 +906,10 @@ void tx_ring_ip(struct task_base *tbase, struct rte_ring *ring, uint8_t command,
 
 void tx_ring(struct task_base *tbase, struct rte_ring *ring, uint16_t command,  struct rte_mbuf *mbuf)
 {
+	plog_dbg("VE: hmm ab packet fekega apun\n");
 	plogx_dbg("\tSending command %s to ring %p using mbuf %p - ring size now %d\n", actions_string[command], ring, mbuf, rte_ring_free_count(ring));
 	int ret = tx_ring_all(tbase, ring, command,  mbuf, 0, 0, 0);
+	plog_dbg("VE: fek dia. ret code is %d\n", ret);
 	if (unlikely(ret != 0)) {
 		plogx_dbg("\tFail to send command %s to ring %p using mbuf %p - ring size now %d\n", actions_string[command], ring, mbuf, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);

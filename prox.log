@@ -1,0 +1,204 @@
+=== prox 22.12 ===
+	Using DPDK 22.11.0
+	git version 02425932-T3.14.0-dirty
+	ncurses version = 6.2 (ncurses 6.2.20200212)
+	Changed TERM from xterm to putty
+	RDT-M. Supports Intel RDT Monitoring capability
+	RDT-A. Supports Intel RDT Allocation capability
+	Supports L3 Cache Intel RDT Monitoring
+	Intel RDT Monitoring has 207 maximum RMID
+	Supports L3 occupancy monitoring
+	Supports L3 Total bandwidth monitoring
+	Supports L3 Local bandwidth monitoring
+	L3 Cache Intel RDT Monitoring Capability has 207 maximum RMID
+	Upscaling_factor = 106496
+	Supports L3 Cache Allocation Technology
+	Supports MBA Allocation Technology
+	Code and Data Prioritization Technology supported
+	L3 Cache Allocation Technology Enumeration Highest COS number = 15
+	L2 Cache Allocation Technology Enumeration COS number = 0
+	Memory Bandwidth Allocation Enumeration COS number = 7
+init shit. mcast addr is 0kuch to hua . mcast addr is 767in mcast infoi
+in mcast infoi
+=== Parsing configuration file 'prox_sender.cfg' ===
+	*** Reading [lua] section ***
+	*** Reading [variables] section ***
+	*** Reading [eal options] section ***
+	*** Reading [cache set #] sections ***
+	*** Reading [port #] sections ***
+	*** Reading [defaults] section ***
+	*** Reading [global] section ***
+	*** Reading [core #] sections ***
+	global ipv6 configured => NDP enabled
+	global ipv6 configured => NDP enabled
+=== Setting up RTE EAL ===
+	Worker threads core mask is 0x280000000000008000
+	With master core index 15, full core mask is 0x280000000000008000
+	EAL command line: /opt/samplevnf/VNFs/DPPD-PROX/build/prox -c0x280000000000008000 --main-lcore=15 -n4 --create-uio-dev --allow 0000:d8:00.5
+	EAL Initialized
+=== Initializing rte devices ===
+	DPDK has found 1 ports
+	Found DPDK port id 0 0000:d8:00.5
+	Getting info for rte dev 0
+	Port 0 : driver='mlx5_pci' tx_queues=1024 rx_queues=1024
+	Port 0 : 0<=nb_tx_desc<=65535 0<=nb_rx_desc<=65535
+=== Calibrating TSC overhead ===
+	TSC running at 2100000000 Hz
+=== Initializing mempools ===
+		Short name of the port is mlx5_pci.
+	Creating mempool with name 'core_69_task_0_pool' on socket 1
+	Mempool 0x11ffad1000 size = 16384 * 2312 cache 256, socket 1
+=== Initializing port addresses ===
+Setting MAC to 86:61:d9:ee:7c:09
+=== Initializing queue numbers on cores ===
+=== Initializing rings on cores ===
+	*** Initializing rings on core 15, task 0 ***
+	*** Initializing rings on core 67, task 0 ***
+	*** Initializing rings on core 69, task 0 ***
+	Initialized 0 rings:
+		Number of packet rings: 0
+		Number of control rings: 0
+		Number of optimized rings: 0
+		Creating ring on socket 1 with size 256
+			source core, task and socket = 67, 0, 1
+			destination core, task and socket = 15, 0, 1
+			destination worker id = 0
+			Core 67 task 0 to -> core 15 task 0 ctrl_ring pkt 0x11fb588300 A
+		Creating ring on socket 1 with size 256
+			source core, task and socket = 15, 0, 1
+			destination core, task and socket = 67, 0, 1
+			destination worker id = 0
+			Core 15 task 0 to -> core 67 task 0 ctrl_ring pkt 0x11fb587900 B
+		Creating ring on socket 1 with size 256
+			source core, task and socket = 69, 0, 1
+			destination core, task and socket = 15, 0, 1
+			destination worker id = 0
+			Core 69 task 0 to -> core 15 task 0 ctrl_ring pkt 0x11fb588300 A
+		Creating ring on socket 1 with size 256
+			source core, task and socket = 15, 0, 1
+			destination core, task and socket = 69, 0, 1
+			destination worker id = 0
+			Core 15 task 0 to -> core 69 task 0 ctrl_ring pkt 0x11fb586f00 C
+=== Checking configuration consistency ===
+	Core 67 task 0 transmitting to port 0 in ndp submode
+luuuuuuuuuuuuuuuuuuuuuuuul
+entered this god forsaken while loop once
+entered this god forsaken for loop once
+value of rx_port_id: 1 and value of port_id: -61036432	Core 67 task 0 has found core 69 task 0 receiving from port 0 in ndp submode
+=== Initializing ports ===
+	*** Initializing port 0 ***
+		Port name is set to ipv6
+		Port max RX/TX queue is 1024/1024
+		Port driver is mlx5_pci
+		Supported speed mask = 0x5d20
+		Highest link speed capa = 100000 Mbps
+		RX offload capa = 0x18621f = VLAN STRIP | IPV4 CKSUM | UDP CKSUM | TCP CKSUM | TCP LRO | VLAN FILTER | SCATTER | TIMESTAMP | 
+		TX offload capa = 0x196af = VLAN INSERT | IPV4 CKSUM | UDP CKSUM | TCP CKSUM | TCP TS0 | OUTER IPV4 CKSUM | VLAN TNL TSO | GRE TNL TSO | GENEVE TNL TSO | MULTI SEG | 
+		rx_queue_offload_capa = 0x18601f
+		tx_queue_offload_capa = 0x0
+		flow_type_rss_offloads = 0xf00000000803afbc
+		default RX port conf: burst_size = 64, ring_size = 256, nb_queues = 16
+		default TX port conf: burst_size = 64, ring_size = 256, nb_queues = 16
+		Setting MTU size to 1500 for port 0 ...
+error 			rte_eth_dev_set_mtu() failed on port 0: error -22
+		 Enabling RSS rss_hf = 0x0 (requested 0x2abac, supported 0xf00000000803afbc)
+		RTE_ETH_RX_OFFLOAD_KEEP_CRC disabled
+		RTE_ETH_RX_OFFLOAD_JUMBO_FRAME disabled
+		RTE_ETH_RX_OFFLOAD_VLAN_STRIP disabled
+		RTE_ETH_TX_OFFLOAD_IPV4_CKSUM enabled on port
+		RTE_ETH_TX_OFFLOAD_UDP_CKSUM enabled on port
+		RTE_ETH_TX_OFFLOAD_VLAN_INSERT disabled
+		RTE_ETH_TX_OFFLOAD_MULTI_SEGS disabled
+		RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE enabled on port
+		Configuring port 0... with 1 RX queues and 1 TX queues
+		MAC address set to 86:61:d9:ee:7c:09
+		Setting up TX queue 0 on socket 1 with 2048 desc
+		Setting up RX queue 0 on port 0 on socket 1 with 2048 desc (pool 0x0x11ffad1000)
+		Starting up port 0 ... done: Link Up - speed 100000 Mbps - full-duplex
+		rte_eth_dev_set_rx_queue_stats_mapping() failed: error -95
+		rte_eth_dev_set_tx_queue_stats_mapping() failed: error -95
+	*** Calling early init on all tasks ***
+	Shared data tracking hash table created with size 8192
+=== Initializing tasks ===
+	Initializing MASTER struct for core 15 task 0
+	external ip hash table allocated, with 262144 entries of size 4
+	external ip table, with 262144 entries of size 272
+	internal ip hash table allocated, with 262144 entries of size 5
+	internal ip table, with 262144 entries of size 16
+	external ip6 hash table allocated, with 262144 entries of size 16
+	external ip6_table, with 262144 entries of size 272
+	internal ip6 hash table allocated, with 262144 entries of size 17
+	internal ip6 table, with 262144 entries of size 16
+	RTMGRP_NEIGH netlink group bound; fd = 29
+	RTMGRP_IPV4_ROUTE netlink group bound; fd = 35
+	Mempool 0x11ef946640 (master_arp_nd_pool) size = 1024 * 2048 cache 256, socket 1
+	*** Initializing core 15 (1 task) ***
+	*** Initializing core 67 (1 task) ***
+		Initializing struct for core 67 task 0
+		Task (67,0) configured in L3/NDP mode
+		Initializing L3 (IPv4)
+		Initializing NDP (IPv6)
+		arp/ndp table, with 262144 entries of size 376
+		Mbuf Size to create mempool is 1782.
+		Creating mempool with name 'hen_pool'
+		Mempool 0x11ed57fa40 size = 16383 * 1782 cache 256, socket 1
+		Generator id = 0
+		Port 0: max link speed is 100000 Mbps
+		Loading from pcap /home/ubuntu/intel-pcap-ipv6-1-100
+8784163844.133989 C15 info 1 packets in pcap file '/home/ubuntu/intel-pcap-ipv6-1-100'; max frame size=116
+8784163844.134000 C15 info Loading 1 packets from pcap
+		hash table name = A067_hash_gen_table
+		flow_id hash table allocated, with 8 entries of size 16
+debug Added key 205, 0, 0, 0, 100
+		8 flows allocated
+	*** Initializing core 69 (1 task) ***
+		Initializing struct for core 69 task 0
+		Task (69,0) configured in L3/NDP mode
+=== PROX started ===
+	Maximum core_id = 103
+	Associating core 67 to rmid 207 (associating each core used by prox to a different rmid)
+debug core 67, rmid was 207, now setting to 207
+	Associating core 69 to rmid 206 (associating each core used by prox to a different rmid)
+debug core 69, rmid was 206, now setting to 206
+	At initialization: Cache allocation set 0 (msr c90): mask 7ff
+	At initialization: Cache allocation set 1 (msr c91): mask 7ff
+	At initialization: Cache allocation set 2 (msr c92): mask 7ff
+	At initialization: Cache allocation set 3 (msr c93): mask 7ff
+	At initialization: Cache allocation set 4 (msr c94): mask 7ff
+	At initialization: Cache allocation set 5 (msr c95): mask 7ff
+	At initialization: Cache allocation set 6 (msr c96): mask 7ff
+	At initialization: Cache allocation set 7 (msr c97): mask 7ff
+	At initialization: Cache allocation set 8 (msr c98): mask 7ff
+	At initialization: Cache allocation set 9 (msr c99): mask 7ff
+	At initialization: Cache allocation set 10 (msr c9a): mask 7ff
+	At initialization: Cache allocation set 11 (msr c9b): mask 7ff
+	At initialization: Cache allocation set 12 (msr c9c): mask 7ff
+	At initialization: Cache allocation set 13 (msr c9d): mask 7ff
+	At initialization: Cache allocation set 14 (msr c9e): mask 7ff
+	At initialization: Cache allocation set 15 (msr c9f): mask 7ff
+	No default cache set for core 67
+	No default cache set for core 69
+offset = -1, -1, -1, -1, -1, -1 -1
+Starting cores: 67, 69
+	Core 67, task 0, local IPv6 addr is fe80:0000:0000:0000:8461:d9ff:feee:7c09 (fe80::8461:d9ff:feee:7c09)
+	Core 67, task 0, global IPv6 addr is abcd:0000:0000:0000:0000:0000:0000:0001 (abcd::1)
+8784163844.175985 C15 debug 	registering node with port 0 core 67 and task 0
+	Mempool 0x11eb5fe540 (arp1_pool) size = 1024 * 2048 cache 256, socket 1 (for ARP/ND)
+Sending Router Sollicitation
+port id is 0following arguments are being sent - 2nd - '†aÙî|	ipv6', 3rd = 'dummmy', 4th= '0'value of out is 0Sending unsollicited Neighbour Advertisement
+Starting core 67 (all tasks)
+Starting core 69 (all tasks)
+Waiting for core 67 to start...Entering main loop on core 67
+	ip_src_pos = 22, ip6_src = abcd:0000:0000:0000:0000:0000:0000:0001
+8784163844.176405 C67 debug 	registering node with port 0 core 67 and task 0
+Entering main loop on core 69
+ OK
+Waiting for core 69 to start... OK
+Core 67: ==> TX port 0 (queue 0)
+Core 69: RX port 0 (queue 0) ==>
+Started without warnings
+Leaving...
+Stopping cores: 67, 69
+Aborting...
+Closing port 0
+freeing pool 0x11ffad1000

@@ -128,7 +128,7 @@ EXTRA_CFLAGS += -ggdb
 endif
 
 ifeq ($(log),)
-CFLAGS += -DPROX_MAX_LOG_LVL=2
+CFLAGS += -DPROX_MAX_LOG_LVL=3
 else
 CFLAGS += -DPROX_MAX_LOG_LVL=$(log)
 endif

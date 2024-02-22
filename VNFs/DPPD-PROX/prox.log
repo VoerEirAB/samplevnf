@@ -1,0 +1,22 @@
+=== prox 22.12 ===
+	Using DPDK 22.11.0
+	git version 02425932-T3.14.0
+	ncurses version = 6.2 (ncurses 6.2.20200212)
+	Changed TERM from xterm to putty
+	RDT-M. Supports Intel RDT Monitoring capability
+	RDT-A. Supports Intel RDT Allocation capability
+	Supports L3 Cache Intel RDT Monitoring
+	Intel RDT Monitoring has 207 maximum RMID
+	Supports L3 occupancy monitoring
+	Supports L3 Total bandwidth monitoring
+	Supports L3 Local bandwidth monitoring
+	L3 Cache Intel RDT Monitoring Capability has 207 maximum RMID
+	Upscaling_factor = 106496
+	Supports L3 Cache Allocation Technology
+	Supports MBA Allocation Technology
+	Code and Data Prioritization Technology supported
+	L3 Cache Allocation Technology Enumeration Highest COS number = 15
+	L2 Cache Allocation Technology Enumeration COS number = 0
+	Memory Bandwidth Allocation Enumeration COS number = 7
+=== Parsing configuration file 'prox_sender.cfg' ===
+error 	Error opening config file 'prox_sender.cfg': No such file or directory

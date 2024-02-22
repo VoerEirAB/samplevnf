@@ -204,9 +204,12 @@ static void check_missing_rx(void)
 		rx_lconf = NULL;
 		ok = 0;
 		plog_info("\tCore %d task %d transmitting to port %d in %s submode\n", lconf->id, targ->id, port_id, l3 ? "l3":"ndp");
+		plog_info("luuuuuuuuuuuuuuuuuuuuuuuul\n");
 		while (core_targ_next(&rx_lconf, &rx_targ, 0) == 0) {
 			for (uint8_t i = 0; i < rx_targ->nb_rxports; ++i) {
+				plog_info("entered this god forsaken for loop once\n");
 				rx_port_id = rx_targ->rx_port_queue[i].port;
+				plog_info("value of rx_port_id: %d and value of port_id: %d");
 				if ((rx_port_id == port_id) &&
 					( ((rx_targ->flags & TASK_ARG_L3) && l3) ||
 					((rx_targ->flags & TASK_ARG_NDP) && ndp) ) ){
@@ -219,6 +222,7 @@ static void check_missing_rx(void)
 					((rx_targ->flags & TASK_ARG_L3) && l3) ? "l3":"ndp");
 				break;
 			}
+			plog_info("entered this god forsaken while loop once\n");
 		}
 		PROX_PANIC(ok == 0, "%s sub mode for port %d on core %d task %d, but no core/task receiving on that port\n", l3 ? "l3":"ndp", port_id, lconf->id, targ->id);
 	}

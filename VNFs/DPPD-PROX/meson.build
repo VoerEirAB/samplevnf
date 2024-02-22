@@ -51,7 +51,7 @@ if get_option('dbg')
 endif
 
 if get_option('log')
-	add_project_arguments('-DPROX_MAX_LOG_LVL=2',  language: 'c')
+	add_project_arguments('-DPROX_MAX_LOG_LVL=3',  language: 'c')
 endif
 
 if get_option('gen_decap_ipv6_to_ipv4_cksum').enabled()

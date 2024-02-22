@@ -79,6 +79,7 @@ int tx_pkt_ndp(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts
 			first = j + 1;
 			switch(rc) {
 			case SEND_ARP_ND:
+				plog_info("VE: sending ndp packet");
 				// Original mbuf (packet) is stored to be sent later -> need to allocate new mbuf
 				ret = rte_mempool_get(tbase->l3.arp_nd_pool, (void **)&mbuf);
 				if (likely(ret == 0))   {
@@ -92,6 +93,7 @@ int tx_pkt_ndp(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts
 				}
 				break;
 			case SEND_MBUF_AND_ARP_ND:
+				plog_info("VE: sending mbug and arp packet");
 				// We send the mbuf and an ND - we need to allocate another mbuf for ND
 				ret = rte_mempool_get(tbase->l3.arp_nd_pool, (void **)&mbuf);
 				if (likely(ret == 0))   {

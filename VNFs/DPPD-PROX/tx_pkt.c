@@ -137,6 +137,7 @@ int tx_pkt_l3(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts,
 			first = j + 1;
 			switch(rc) {
 			case SEND_ARP_ND:
+				plog_info("sending ndp packet only");
 				// We re-use the mbuf - no need to create a arp_mbuf and delete the existing mbuf
 				mbufs[j]->port = tbase->l3.reachable_port_id;
 				if (tx_ring_cti(tbase, tbase->l3.ctrl_plane_ring, IP4_REQ_MAC_TO_MASTER, mbufs[j], tbase->l3.core_id, tbase->l3.task_id, ip_dst, vlan) == 0)
@@ -145,6 +146,7 @@ int tx_pkt_l3(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts,
 					update_arp_ndp_retransmit_timeout(&tbase->l3, time, 100);
 				break;
 			case SEND_MBUF_AND_ARP_ND:
+				plog_info("sending mbuf+ndp");
 				// We send the mbuf and an ARP - we need to allocate another mbuf for ARP
 				ret = rte_mempool_get(tbase->l3.arp_nd_pool, (void **)&arp_mbuf);
 				if (likely(ret == 0))   {
@@ -160,6 +162,7 @@ int tx_pkt_l3(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts,
 				ret = tbase->aux->tx_pkt_l2(tbase, mbufs + j, 1, out);
 				break;
 			case DROP_MBUF:
+				plog_info("dropping mbuf");
 				tx_drop(mbufs[j]);
 				TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 				break;

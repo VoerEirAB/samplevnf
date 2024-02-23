@@ -839,7 +839,9 @@ void handle_ctrl_plane_pkts(struct task_base *tbase, struct rte_mbuf **mbufs, ui
 			break;
 		case MAC_INFO_FROM_MASTER_FOR_IPV6:
 			ip6 = ctrl_ring_get_ipv6_addr(mbufs[j]);
-			uint64_t data = ctrl_ring_get_data(mbufs[j]);
+			hdr = rte_pktmbuf_mtod(mbufs[j], prox_rte_ether_hdr *);
+			// this data variable is pretty useless and parse the packets wrongly.
+			//uint64_t data = ctrl_ring_get_data(mbufs[j]);
 
 			if (l3->n_pkts < 4) {
 				// Few packets tracked - should be faster to loop through them thean using a hash table
@@ -850,16 +852,24 @@ void handle_ctrl_plane_pkts(struct task_base *tbase, struct rte_mbuf **mbufs, ui
 				}
 				if (idx < l3->n_pkts) {
 					// IP found; this is a reply for one of our requests!
-					memcpy(&l3->optimized_arp_table[idx].mac, &data, sizeof(prox_rte_ether_addr));
+					memcpy(&l3->optimized_arp_table[idx].mac, &(hdr->s_addr), sizeof(prox_rte_ether_addr));
+					//memcpy(&l3->optimized_arp_table[idx].mac, &data, sizeof(prox_rte_ether_addr));
 					l3->optimized_arp_table[idx].reachable_timeout = tsc + l3->reachable_timeout * hz / 1000;
+					plog_info("VE inside fewer packets\n");
+					plog_info("\tVE Populated MAC entry for IP "IPv6_BYTES_FMT" MAC "MAC_BYTES_FMT"\n",
+					    IPv6_BYTES(l3->optimized_arp_table[idx].ip6.bytes), MAC_BYTES(l3->optimized_arp_table[idx].mac.addr_bytes));
 				}
 			} else {
 				int ret = rte_hash_add_key(l3->ip6_hash, (const void *)ip6);
 				if (ret < 0) {
 					plogx_info("Unable add ip "IPv6_BYTES_FMT" in mac_hash\n", IPv6_BYTES(ip6->bytes));
 				} else {
-					memcpy(&l3->arp_table[ret].mac, &data, sizeof(prox_rte_ether_addr));
+					memcpy(&l3->arp_table[ret].mac, &(hdr->s_addr), sizeof(prox_rte_ether_addr));
+					//memcpy(&l3->arp_table[ret].mac, &data, sizeof(prox_rte_ether_addr));
 					l3->arp_table[ret].reachable_timeout = tsc + l3->reachable_timeout * hz / 1000;
+					plog_info("VE inside hash flow packets\n");
+					plog_info("\tVE Populated MAC entry for IP "IPv6_BYTES_FMT" MAC "MAC_BYTES_FMT"\n",
+					    IPv6_BYTES(ip6), MAC_BYTES(l3->arp_table[ret].mac.addr_bytes));
 				}
 			}
 			tx_drop(mbufs[j]);

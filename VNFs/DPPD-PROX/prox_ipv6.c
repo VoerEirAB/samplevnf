@@ -26,7 +26,7 @@ char ip6_str[40]; // 8 blocks of 2 bytes (4 char) + 1x ":" between blocks
 
 void set_mcast_mac_from_ipv6(prox_rte_ether_addr *mac, struct ipv6_addr *ipv6_addr)
 {
-	plog_info("in mcast infoi\n");
+	plog_dbg("in mcast infoi\n");
 	mac->addr_bytes[0] = 0x33;
 	mac->addr_bytes[1] = 0x33;
 	memcpy(((uint32_t *)&mac->addr_bytes[2]), (uint32_t *)(&ipv6_addr->bytes[12]), sizeof(uint32_t));

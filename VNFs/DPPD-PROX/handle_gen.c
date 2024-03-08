@@ -1172,7 +1172,7 @@ static int handle_gen_bulk(struct task_base *tbase, struct rte_mbuf **mbufs, uin
 	// If we failed to send some packets, we need to do some clean-up:
 
 	if (unlikely(ret)) {
-		plog_info("VE gen fail ho gya\n");
+		plog_dbg("VE gen fail ho gya\n");
 		// We need re-use the packets indexes not being sent
 		// Hence non-sent packets will not be considered as lost by the receiver when it looks at
 		// packet ids. This should also increase the percentage of packets used for latency measurements
@@ -1778,7 +1778,7 @@ static void init_task_gen(struct task_base *tbase, struct task_args *targ)
 {
 	struct task_gen *task = (struct task_gen *)tbase;
 	task->socket_id = rte_lcore_to_socket_id(targ->lconf->id);
-	plog_info("VE Submode: %s\n", targ->sub_mode_str);
+	plog_dbg("VE Submode: %s\n", targ->sub_mode_str);
 
 	task->packet_id_pos = targ->packet_id_pos;
 

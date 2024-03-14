@@ -40,6 +40,7 @@ int plogx_err(const char *fmt, ...) __attribute__((format(printf, 1, 2), cold));
 int plogd_err(const struct rte_mbuf *mbuf, const char *fmt, ...) __attribute__((format(printf, 2, 3), cold));
 int plogdx_err(const struct rte_mbuf *mbuf, const char *fmt, ...) __attribute__((format(printf, 2, 3), cold));
 #else
+
 __attribute__((format(printf, 2, 3))) static inline int plog_err_or_panic(__attribute__((unused)) int do_panic, __attribute__((unused)) const char *fmt, ...) {return 0;}
 __attribute__((format(printf, 1, 2))) static inline int plog_err(__attribute__((unused)) const char *fmt, ...) {return 0;}
 __attribute__((format(printf, 1, 2))) static inline int plogx_err(__attribute__((unused)) const char *fmt, ...) {return 0;}

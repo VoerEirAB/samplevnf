@@ -139,14 +139,14 @@ static struct rte_sched_subport_params subport_params_default = {
 void set_global_defaults(struct prox_cfg *prox_cfg)
 {	
 
-	plog_info("init shit. mcast addr is %d", prox_cfg->all_routers_ipv6_mcast_addr);
+	plog_dbg("init shit. mcast addr is %d", prox_cfg->all_routers_ipv6_mcast_addr);
 	if (parse_ip6(&prox_cfg->all_routers_ipv6_mcast_addr, ALL_ROUTERS_IPV6_MCAST_ADDR) != 0)
 		plog_err("Failed to parse %s\n", ALL_ROUTERS_IPV6_MCAST_ADDR);
 	if (parse_ip6(&prox_cfg->all_nodes_ipv6_mcast_addr, ALL_NODES_IPV6_MCAST_ADDR) != 0)
 		plog_err("Failed to parse %s\n", ALL_NODES_IPV6_MCAST_ADDR);
 	if (parse_ip6(&prox_cfg->random_ip, RANDOM_IPV6) != 0)
 		plog_err("Failed to parse %s\n", RANDOM_IPV6);
-	plog_info("kuch to hua . mcast addr is %d", prox_cfg->all_routers_ipv6_mcast_addr);
+	plog_dbg("kuch to hua . mcast addr is %d", prox_cfg->all_routers_ipv6_mcast_addr);
 	set_mcast_mac_from_ipv6(&prox_cfg->all_routers_mac_addr, &prox_cfg->all_routers_ipv6_mcast_addr);
 	set_mcast_mac_from_ipv6(&prox_cfg->all_nodes_mac_addr, &prox_cfg->all_nodes_ipv6_mcast_addr);
 }

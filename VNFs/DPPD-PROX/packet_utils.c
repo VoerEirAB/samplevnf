@@ -168,11 +168,11 @@ static void send_router_sollicitation(struct task_base *tbase, struct task_args 
 
 	ret = rte_mempool_get(tbase->l3.arp_nd_pool, (void **)&mbuf);
 	if (likely(ret == 0)) {
-		plog_info("port id is %d", port_id);
+		plog_dbg("port id is %d", port_id);
 		mbuf->port = port_id;
-		plog_info("following arguments are being sent - 2nd - '%s', 3rd = '%s', 4th= '%d'", prox_port_cfg[port_id].eth_addr.addr_bytes, "dummmy", prox_port_cfg[port_id].vlan_tags[0]);
+		plog_dbg("following arguments are being sent - 2nd - '%s', 3rd = '%s', 4th= '%d'", prox_port_cfg[port_id].eth_addr.addr_bytes, "dummmy", prox_port_cfg[port_id].vlan_tags[0]);
 		build_router_sollicitation(mbuf, &prox_port_cfg[port_id].eth_addr, &targ->local_ipv6, prox_port_cfg[port_id].vlan_tags[0]);
-		plog_info("value of out is %d", out);
+		plog_dbg("value of out is %d", out);
 		tbase->aux->tx_ctrlplane_pkt(tbase, &mbuf, 1, &out);
 		TASK_STATS_ADD_TX_NON_DP(&tbase->aux->stats, 1);
 	} else {
@@ -367,8 +367,8 @@ int write_ip6_dst_mac(struct task_base *tbase, struct rte_mbuf *mbuf, struct ipv
 	}
 	struct l3_base *l3 = &(tbase->l3);
         // plog_info("hiiiiiiii iamma die now");
-	plog_info("VE: local and global  be "IPv6_BYTES_FMT" using "IPv6_BYTES_FMT" (local)\n", IPv6_BYTES(l3->local_ipv6.bytes), IPv6_BYTES(l3->global_ipv6.bytes));
-	plog_info("VE:  target is "IPv6_BYTES_FMT" \n", IPv6_BYTES(ip_dst->bytes));
+	plog_dbg("VE: local and global  be "IPv6_BYTES_FMT" using "IPv6_BYTES_FMT" (local)\n", IPv6_BYTES(l3->local_ipv6.bytes), IPv6_BYTES(l3->global_ipv6.bytes));
+	plog_dbg("VE:  target is "IPv6_BYTES_FMT" \n", IPv6_BYTES(ip_dst->bytes));
 	// plog_info("l3 local ipv6 value ip_dst :'%d'\n ", *(uint64_t *)(&l3->local_ipv6));
 
 	// plog_info("l3 global ipv6 value ip_dst :'%d'\n ", *(uint64_t *)(&l3->global_ipv6));

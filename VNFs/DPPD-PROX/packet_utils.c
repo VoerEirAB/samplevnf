@@ -341,8 +341,10 @@ int write_dst_mac(struct task_base *tbase, struct rte_mbuf *mbuf, uint32_t *ip_d
 		int ret = rte_hash_lookup(l3->ip_hash, (const void *)ip_dst);
 		if (unlikely(ret < 0)) {
 			// IP not found, try to send an ARP
+			plog_dbg("ip not found!!");
 			return add_key_and_send_arp(l3->ip_hash, ip_dst, &l3->arp_table[ret], tsc, hz, l3->arp_ndp_retransmit_timeout, MAX_HOP_INDEX, time);
 		} else {
+			plog_dbg("ip found!!");
 			// IP has been found
 			return update_mac_and_send_mbuf(&l3->arp_table[ret], mac, tsc, hz, l3->arp_ndp_retransmit_timeout, time);
 		}

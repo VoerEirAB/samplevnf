@@ -521,6 +521,8 @@ static uint16_t tx_pkt_free_dropped(__attribute__((unused)) struct task_base *tb
 			}
 			mbufs[n_kept++] = mbufs[i];
 		}
+        plog_dbg("in tx_pkt_free_dropped. inc dropped pkt stat");
+
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, n_discard);
 		TASK_STATS_ADD_DROP_HANDLED(&tbase->aux->stats, n_pkts - n_kept - n_discard);
 		return n_kept;
@@ -839,8 +841,10 @@ int tx_pkt_drop_all(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n
 		for (uint16_t j = 0; j < n_pkts; ++j) {
 			if (out[j] == OUT_HANDLED)
 				TASK_STATS_ADD_DROP_HANDLED(&tbase->aux->stats, 1);
-			else
-				TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
+			else {
+                plog_dbg("in tx_pkt drop all. inc dropped pkt stat");
+                TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
+            }
 		}
 	}
 	return n_pkts;

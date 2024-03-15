@@ -188,7 +188,7 @@ static inline int handle_ndp(struct task_base *tbase, uint16_t nb_rx, struct rte
 	prox_rte_ether_hdr *hdr[MAX_PKT_BURST];
 	int skip = 0;
 	uint16_t vlan = 0;
-    plog_dbg("VE: in  handle ndp func\n");
+    plog_dbg("VE: in handle ndp func\n");
 
 	for (i = 0; i < nb_rx; i++) {
         plog_dbg("VE: in  handle ndp func first for loop\n");

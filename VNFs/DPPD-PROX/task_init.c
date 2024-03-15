@@ -176,15 +176,21 @@ static size_t init_rx_tx_rings_ports(struct task_args *targ, struct task_base *t
         plog_dbg("VE: in  else rx tx rings port func\n");
 		if (targ->nb_rxports == 1) {
             plog_dbg("VE: in  rx tx rings port func\n");
-            if (targ->flags & TASK_ARG_L3)
+            if (targ->flags & TASK_ARG_L3) {
                 plog_dbg("VE: in  TASK ARG L3 func\n");
-				tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX)? rx_pkt_hw1_multi_l3 : rx_pkt_hw1_l3;
-			else if (targ->flags & TASK_ARG_NDP)
+                tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX) ? rx_pkt_hw1_multi_l3
+                                                                                         : rx_pkt_hw1_l3;
+            }
+			else if (targ->flags & TASK_ARG_NDP) {
                 plog_dbg("VE: in  TASK ARG NDP func\n");
-				tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX)? rx_pkt_hw1_multi_ndp : rx_pkt_hw1_ndp;
-			else
+                tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX) ? rx_pkt_hw1_multi_ndp
+                                                                                         : rx_pkt_hw1_ndp;
+            }
+			else{
                 plog_dbg("VE: in  TASK ARG else func\n");
-				tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX)? rx_pkt_hw1_multi : rx_pkt_hw1;
+                tbase->rx_pkt = (targ->task_init->flag_features & TASK_FEATURE_MULTI_RX) ? rx_pkt_hw1_multi
+                                                                                         : rx_pkt_hw1;
+            }
 			tbase->rx_params_hw1.rx_pq.port =  targ->rx_port_queue[0].port;
 			tbase->rx_params_hw1.rx_pq.queue = targ->rx_port_queue[0].queue;
 		}

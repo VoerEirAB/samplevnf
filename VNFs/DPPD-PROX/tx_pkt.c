@@ -898,7 +898,7 @@ int tx_ring_cti(struct task_base *tbase, struct rte_ring *ring, uint8_t command,
 	ctrl_ring_set_vlan(mbuf, vlan);
 	int ret = tx_ring_all(tbase, ring, command,  mbuf, core_id, task_id, ip);
 	if (unlikely(ret != 0)) {
-		plogx_dbg("\tFail to send command %s with ip %d.%d.%d.%d to ring %p using mbuf %p, core %d and task %d - ring size now %d\n", actions_string[command], IP4(ip), ring, mbuf, core_id, task_id, rte_ring_free_count(ring));
+		plog_dbg("\tFail to send command %s with ip %d.%d.%d.%d to ring %p using mbuf %p, core %d and task %d - ring size now %d\n", actions_string[command], IP4(ip), ring, mbuf, core_id, task_id, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		rte_pktmbuf_free(mbuf);
 	}
@@ -910,7 +910,7 @@ void tx_ring_ip(struct task_base *tbase, struct rte_ring *ring, uint8_t command,
 	plogx_dbg("\tSending command %s with ip %d.%d.%d.%d to ring %p using mbuf %p - ring size now %d\n", actions_string[command], IP4(ip), ring, mbuf, rte_ring_free_count(ring));
 	int ret = tx_ring_all(tbase, ring, command,  mbuf, 0, 0, ip);
 	if (unlikely(ret != 0)) {
-		plogx_dbg("\tFail to send command %s with ip %d.%d.%d.%d to ring %p using mbuf %p - ring size now %d\n", actions_string[command], IP4(ip), ring, mbuf, rte_ring_free_count(ring));
+		plog_dbg("\tFail to send command %s with ip %d.%d.%d.%d to ring %p using mbuf %p - ring size now %d\n", actions_string[command], IP4(ip), ring, mbuf, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		rte_pktmbuf_free(mbuf);
 	}
@@ -923,7 +923,7 @@ void tx_ring(struct task_base *tbase, struct rte_ring *ring, uint16_t command,  
 	int ret = tx_ring_all(tbase, ring, command,  mbuf, 0, 0, 0);
 	plog_dbg("VE: fek dia. ret code is %d\n", ret);
 	if (unlikely(ret != 0)) {
-		plogx_dbg("\tFail to send command %s to ring %p using mbuf %p - ring size now %d\n", actions_string[command], ring, mbuf, rte_ring_free_count(ring));
+		plog_dbg("\tFail to send command %s to ring %p using mbuf %p - ring size now %d\n", actions_string[command], ring, mbuf, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		rte_pktmbuf_free(mbuf);
 	}
@@ -947,7 +947,7 @@ void tx_ring_route(struct task_base *tbase, struct rte_ring *ring, int add, stru
 	}
 	int ret = rte_ring_enqueue(ring, mbuf);
 	if (unlikely(ret != 0)) {
-		plogx_dbg("\tFail to send command %s to ring %p using mbuf %p - ring size now %d\n", actions_string[command], ring, mbuf, rte_ring_free_count(ring));
+		plog_dbg("\tFail to send command %s to ring %p using mbuf %p - ring size now %d\n", actions_string[command], ring, mbuf, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		rte_pktmbuf_free(mbuf);
 	}
@@ -966,7 +966,7 @@ void tx_ring_cti6(struct task_base *tbase, struct rte_ring *ring, uint8_t comman
 	ret = rte_ring_enqueue(ring, mbuf);
 
 	if (unlikely(ret != 0)) {
-		plogx_dbg("\tFail to send command %s with ip "IPv6_BYTES_FMT" to ring %p using mbuf %p, core %d and task %d - ring size now %d\n", actions_string[command], IPv6_BYTES(ip->bytes), ring, mbuf, core_id, task_id, rte_ring_free_count(ring));
+		plog_dbg("\tFail to send command %s with ip "IPv6_BYTES_FMT" to ring %p using mbuf %p, core %d and task %d - ring size now %d\n", actions_string[command], IPv6_BYTES(ip->bytes), ring, mbuf, core_id, task_id, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		rte_pktmbuf_free(mbuf);
 	}
@@ -984,7 +984,7 @@ void tx_ring_ip6(struct task_base *tbase, struct rte_ring *ring, uint8_t command
 	ret = rte_ring_enqueue(ring, mbuf);
 
 	if (unlikely(ret != 0)) {
-		plogx_dbg("\tFail to send command %s with ip "IPv6_BYTES_FMT" to ring %p using mbuf %p - ring size now %d\n", actions_string[command], IPv6_BYTES(ip->bytes), ring, mbuf, rte_ring_free_count(ring));
+		plog_dbg("\tFail to send command %s with ip "IPv6_BYTES_FMT" to ring %p using mbuf %p - ring size now %d\n", actions_string[command], IPv6_BYTES(ip->bytes), ring, mbuf, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		rte_pktmbuf_free(mbuf);
 	}
@@ -1003,7 +1003,7 @@ void tx_ring_ip6_data(struct task_base *tbase, struct rte_ring *ring, uint8_t co
 	ret = rte_ring_enqueue(ring, mbuf);
 
 	if (unlikely(ret != 0)) {
-		plogx_dbg("\tFail to send command %s with ip "IPv6_BYTES_FMT" to ring %p using mbuf %p - ring size now %d\n", actions_string[command], IPv6_BYTES(ip->bytes), ring, mbuf, rte_ring_free_count(ring));
+		plog_dbg("\tFail to send command %s with ip "IPv6_BYTES_FMT" to ring %p using mbuf %p - ring size now %d\n", actions_string[command], IPv6_BYTES(ip->bytes), ring, mbuf, rte_ring_free_count(ring));
 		TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		rte_pktmbuf_free(mbuf);
 	}

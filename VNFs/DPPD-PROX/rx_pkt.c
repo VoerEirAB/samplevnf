@@ -203,6 +203,7 @@ static inline int handle_ndp(struct task_base *tbase, uint16_t nb_rx, struct rte
         plog_dbg("VE: in  handle ndp func third for loop\n");
 		ipv6_hdr = prox_get_ipv6_hdr(hdr[i], rte_pktmbuf_pkt_len(mbufs[i]), &vlan);
 		if (unlikely((ipv6_hdr) && (ipv6_hdr->proto == ICMPv6))) {
+            plog_dbg("VE: Lag gaye. Issue in ipv6 header.\n")
 			dump_l3(tbase, mbufs[i]);
 			tx_ring(tbase, tbase->l3.ctrl_plane_ring, NDP_PKT_FROM_NET_TO_MASTER, mbufs[i]);
 			skip++;

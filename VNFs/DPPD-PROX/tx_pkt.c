@@ -42,6 +42,7 @@ static inline void buf_pkt_all(struct task_base *tbase, struct rte_mbuf **mbufs,
 			if (out[j] == OUT_HANDLED)
 				TASK_STATS_ADD_DROP_HANDLED(&tbase->aux->stats, 1);
 			else
+                plog_dbg("in buf pkt all\n")
 				TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 		}
 		else {
@@ -106,6 +107,7 @@ int tx_pkt_ndp(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts
 				ret = tbase->aux->tx_pkt_l2(tbase, mbufs + j, 1, out);
 				break;
 			case DROP_MBUF:
+                plog_dbg("in tx pkt ndp case: DROP MBUF\n")
 				tx_drop(mbufs[j]);
 				TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
 				break;

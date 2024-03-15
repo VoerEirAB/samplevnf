@@ -81,6 +81,8 @@ static void next_port_pow2(struct rx_params_hw *rx_params_hw)
 
 static inline void dump_l3(struct task_base *tbase, struct rte_mbuf *mbuf)
 {
+    plog_dbg("VE: in dump l3 func");
+
 	if (unlikely(tbase->aux->task_rt_dump.n_print_rx)) {
 		if ((tbase->aux->task_rt_dump.input == NULL) || (tbase->aux->task_rt_dump.input->reply == NULL)) {
 			plogdx_info(mbuf, "RX: ");
@@ -134,6 +136,7 @@ static inline int handle_l3(struct task_base *tbase, uint16_t nb_rx, struct rte_
 	prox_rte_ipv4_hdr *pip;
 	prox_rte_vlan_hdr *vlan;
 	int skip = 0;
+    plog_dbg("VE: in  handle l3 func\n");
 
 	for (i = 0; i < nb_rx; i++) {
 		PREFETCH0(mbufs[i]);
@@ -185,6 +188,7 @@ static inline int handle_ndp(struct task_base *tbase, uint16_t nb_rx, struct rte
 	prox_rte_ether_hdr *hdr[MAX_PKT_BURST];
 	int skip = 0;
 	uint16_t vlan = 0;
+    plog_dbg("VE: in  handle ndp func\n");
 
 	for (i = 0; i < nb_rx; i++) {
 		PREFETCH0(mbufs[i]);

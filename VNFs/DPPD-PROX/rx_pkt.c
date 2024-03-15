@@ -211,6 +211,7 @@ static inline int handle_ndp(struct task_base *tbase, uint16_t nb_rx, struct rte
 			mbufs[i - skip] = mbufs[i];
 		}
 	}
+    plog_dbg("VE: value of skip is: %d,\n", skip);
 	return skip;
 }
 

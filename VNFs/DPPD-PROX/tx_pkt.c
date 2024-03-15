@@ -68,7 +68,7 @@ int tx_pkt_ndp(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n_pkts
 	struct rte_mbuf *mbuf = NULL;       // used when one need to send both an ARP and a mbuf
 	uint16_t vlan;
 	uint64_t tsc = rte_rdtsc();
-    plog_dbg("VE: in tx pkt ndp function\n")
+    plog_dbg("VE: in tx pkt ndp function\n");
 
 	for (int j = 0; j < n_pkts; j++) {
 		if ((out) && (out[j] >= OUT_HANDLED))

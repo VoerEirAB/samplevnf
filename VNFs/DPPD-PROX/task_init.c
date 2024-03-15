@@ -347,6 +347,7 @@ static size_t init_rx_tx_rings_ports(struct task_args *targ, struct task_base *t
 	}
 
 	if (targ->nb_txrings == 0 && targ->nb_txports == 0) {
+        plog_dbg("VE: setting tx pkt to tx_pkt_drop_all\n");
 		tbase->tx_pkt = tx_pkt_drop_all;
 	}
 

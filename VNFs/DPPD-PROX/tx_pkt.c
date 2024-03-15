@@ -714,6 +714,7 @@ static inline void trace_one_tx_pkt(struct task_base *tbase, struct rte_mbuf *mb
 		}
 	} else if (tbase->aux->tx_pkt_orig == tx_pkt_drop_all) {
 		plogdx_info(mbuf, "Dropped: ");
+        plog_dbg("VE: in trace_one_tx_pkt\n");
 	} else
 		plogdx_info(mbuf, "TX[0]: ");
 }
@@ -842,7 +843,7 @@ int tx_pkt_drop_all(struct task_base *tbase, struct rte_mbuf **mbufs, uint16_t n
 			if (out[j] == OUT_HANDLED)
 				TASK_STATS_ADD_DROP_HANDLED(&tbase->aux->stats, 1);
 			else {
-                plog_dbg("in tx_pkt drop all. inc dropped pkt stat");
+                plog_dbg("VE: in tx_pkt drop all. inc dropped pkt stat");
                 TASK_STATS_ADD_DROP_DISCARD(&tbase->aux->stats, 1);
             }
 		}

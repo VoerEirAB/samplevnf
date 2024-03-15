@@ -219,6 +219,7 @@ void __attribute__((noreturn)) run(uint32_t flags)
 
 	struct task_master *task = (struct task_master *)lcore_cfg[prox_cfg.master].tasks_all[0];
 	if (handle_ctrl_plane) {
+        plog_dbg("VE: ctrl plane exists..... \n");
 		while (stop_prox == 0) {
 			ret = 1;
 			// Run ctrl plane for max 10 msec to let screen and keyboard updates
@@ -247,7 +248,7 @@ void __attribute__((noreturn)) run(uint32_t flags)
 		}
 	} else {
 		while (stop_prox == 0) {
-
+            plog_dbg("VE: ctrl plane does not exists..... \n");
 			if (update_interval < update_interval_threshold)
 				busy_wait_until(next_update);
 			else

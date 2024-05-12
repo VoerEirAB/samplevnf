@@ -515,7 +515,11 @@ static void build_flow_table(struct task_gen *task)
 		for (uint32_t j = 0; j < n_range_flows; j++) {
 			task_gen_apply_ranges(task, buf);
 			key_fields = buf + sizeof(prox_rte_ether_hdr) + offsetof(prox_rte_ipv4_hdr, time_to_live);
+#ifdef RTE_ARCH_X86
 			key.xmm = _mm_loadu_si128((__m128i*)(key_fields));
+#elif defined(__ARM_NEON)
+			key.xmm = vld1q_u8((uint8x16_t *)(key_fields));
+#endif
 			key.pad0 = key.pad1 = 0;
 			int idx = rte_hash_add_key(task->flow_id_table, (const void *)&key);
 			PROX_PANIC(idx < 0, "Unable to add key in table\n");
@@ -532,7 +536,11 @@ static int32_t task_gen_get_flow_id(struct task_gen *task, uint8_t *pkt_hdr)
 	uint8_t *hdr = pkt_hdr + sizeof(prox_rte_ether_hdr) + offsetof(prox_rte_ipv4_hdr, time_to_live);
 	// __m128i data = _mm_loadu_si128((__m128i*)(hdr));
 	// key.xmm = _mm_and_si128(data, mask0);
+	#ifdef RTE_ARCH_X86
 	key.xmm = _mm_loadu_si128((__m128i*)(hdr));
+	#elif defined(__ARM_NEON)
+	key.xmm = vld1q_u8((uint8_t *)(hdr));
+	#endif
 	key.pad0 = key.pad1 = 0;
 	ret = rte_hash_lookup(task->flow_id_table, (const void *)&key);
 	if (ret < 0) {

@@ -923,8 +923,10 @@ static void init_task_nat(struct task_base *tbase, struct task_args *targ)
 	proto_ipsrc_portsrc_mask = _mm_set_epi32(BIT_0_TO_15, 0, ALL_32_BITS, BIT_8_TO_15);
 	proto_ipdst_portdst_mask = _mm_set_epi32(BIT_16_TO_31, ALL_32_BITS, 0, BIT_8_TO_15);
 #elif defined(__ARM_NEON)
-	proto_ipsrc_portsrc_mask = vld1q_s32((int32_t const *)(BIT_0_TO_15 << 96 + 0 << 64 + ALL_32_BITS << 32 + BIT_8_TO_15));
-	proto_ipdst_portdst_mask = vld1q_s32((int32_t const *)(BIT_16_TO_31 << 96 + ALL_32_BITS << 64 + 0 << 32 + BIT_8_TO_15));
+	int32_t const ptr[] = {(int32_t)BIT_0_TO_15, (int32_t)0, (int32_t)ALL_32_BITS, (int32_t)BIT_8_TO_15};
+	proto_ipsrc_portsrc_mask = vld1q_s32(ptr);
+	int32_t const  ptr2[] = {(int32_t)BIT_16_TO_31, (int32_t)ALL_32_BITS, (int32_t)0, (int32_t)BIT_8_TO_15};
+	proto_ipdst_portdst_mask = vld1q_s32(ptr2);
 #endif
 
 	struct lpm4 *lpm;

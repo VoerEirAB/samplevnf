@@ -60,7 +60,7 @@ struct task_lb_5tuple {
 #ifdef RTE_ARCH_X86
 static __m128i mask0;
 #elif defined(__ARM_NEON)
-static uint8x16_t mask0;
+static int32x4_t mask0;
 #endif
 
 static inline uint8_t get_ipv4_dst_port(struct task_lb_5tuple *task, void *ipv4_hdr, uint8_t portid, struct rte_hash * ipv4_l3fwd_lookup_struct)
@@ -78,7 +78,7 @@ static inline uint8_t get_ipv4_dst_port(struct task_lb_5tuple *task, void *ipv4_
 	#ifdef RTE_ARCH_X86
         key.xmm = _mm_and_si128(data, mask0);
 	#elif defined(__ARM_NEON)
-        key.xmm = (uint8x16_t) vandq_s32((int32x4_t) data, (int32x4_t) mask0);
+        key.xmm = (uint8x16_t) vandq_s32((int32x4_t) data, mask0);
 	#endif
 
 	/* Get 5 tuple: dst port, src port, dst IP address, src IP address and protocol */
@@ -140,9 +140,10 @@ static void init_task_lb_5tuple(struct task_base *tbase, struct task_args *targ)
 	const int socket_id = rte_lcore_to_socket_id(targ->lconf->id);
 
 	#ifdef RTE_ARCH_X86
-        mask0 = _mm_set_epi32(BIT_12_TO_16_27_TO_31, BIT_27_TO_31, BIT_27_TO_31, BIT_8_TO_10);
+	mask0 = _mm_set_epi32(BIT_12_TO_16_27_TO_31, BIT_27_TO_31, BIT_27_TO_31, BIT_8_TO_10);
 	#elif defined(__ARM_NEON)
-        mask0 = vld1q_s32((BIT_12_TO_16_27_TO_31 << 96) + (BIT_27_TO_31 << 64) + (BIT_27_TO_31 << 32) + BIT_8_TO_10);
+	int32_t const ptr[] = {(int32_t)BIT_12_TO_16_27_TO_31, (int32_t)BIT_27_TO_31, (int32_t)BIT_27_TO_31, (int32_t)BIT_8_TO_10};
+	mask0 = vld1q_s32(ptr);
 	#endif
 	uint8_t *out_table = task->out_if;
 	int ret = lua_to_tuples(prox_lua(), GLOBAL, "tuples", socket_id, &task->lookup_hash, &out_table);

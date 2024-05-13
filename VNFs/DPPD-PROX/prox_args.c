@@ -16,6 +16,8 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #include <rte_sched.h>
 #include <rte_string_fns.h>

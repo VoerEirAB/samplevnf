@@ -518,7 +518,7 @@ static void build_flow_table(struct task_gen *task)
 #ifdef RTE_ARCH_X86
 			key.xmm = _mm_loadu_si128((__m128i*)(key_fields));
 #elif defined(__ARM_NEON)
-			key.xmm = vld1q_u8((uint8x16_t *)(key_fields));
+			key.xmm = vld1q_u8((uint8_t const *)(key_fields));
 #endif
 			key.pad0 = key.pad1 = 0;
 			int idx = rte_hash_add_key(task->flow_id_table, (const void *)&key);

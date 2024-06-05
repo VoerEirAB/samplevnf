@@ -730,8 +730,10 @@ static void set_mbuf_size(struct task_args *targ)
 	 *  - defaulted to MBUF_SIZE.
 	 * Except if set explicitely, ensure that size is big enough for vmxnet3 driver
 	 */
-	if (targ->mbuf_size)
+	if (targ->mbuf_size){
+		plog_info("\n*************mbuf size found. returning chup chap\n");
 		return;
+	}
 
 	targ->mbuf_size = MBUF_SIZE;
 	struct prox_port_cfg *port;
@@ -920,18 +922,23 @@ static void setup_mempools_multiple_per_socket(void)
 		PROX_PANIC(targ->task_init == NULL, "task_init = NULL, is mode specified for core %d, task %d ?\n", lconf->id, targ->id);
 		if (targ->rx_port_queue[0].port == OUT_DISCARD)
 			continue;
+		plog_info("\nsetting mempool rx task********************\n");
 		setup_mempool_for_rx_task(lconf, targ);
 	}
 }
 
 static void setup_mempools(void)
 {
-	if (prox_cfg.flags & UNIQUE_MEMPOOL_PER_SOCKET)
+	if (prox_cfg.flags & UNIQUE_MEMPOOL_PER_SOCKET){
+		plog_info("\n SEtting unique mempools\n");
 		setup_mempools_unique_per_socket();
-	else
+	}
+	else{
+		plog_info("\n Setting multiple mempools\n");
 		setup_mempools_multiple_per_socket();
-}
 
+	}
+}
 static void set_task_lconf(void)
 {
 	struct lcore_cfg *lconf;

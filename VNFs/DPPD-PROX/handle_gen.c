@@ -1459,7 +1459,7 @@ static struct rte_mempool *task_gen_create_mempool(struct task_args *targ, uint1
 	static char name[] = "gen_pool";
 	struct rte_mempool *ret;
 	const int sock_id = rte_lcore_to_socket_id(targ->lconf->id);
-
+        plog_info("\n***********reached for ipv6*******\n");
 	name[0]++;
 	uint32_t mbuf_size = TX_MBUF_SIZE;
 	if (max_frame_size + (unsigned)sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM > mbuf_size)

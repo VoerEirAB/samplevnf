@@ -157,7 +157,7 @@ void set_task_defaults(struct prox_cfg* prox_cfg, struct lcore_cfg* lcore_cfg_in
 		prox_cfg->cpe_table_ports[i] = -1;
 	}
 
-	for (uint8_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
+	for (uint32_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
 		struct lcore_cfg *cur_lcore_cfg_init = &lcore_cfg_init[lcore_id];
 		cur_lcore_cfg_init->id = lcore_id;
 		for (uint8_t task_id = 0; task_id < MAX_TASKS_PER_CORE; ++task_id) {

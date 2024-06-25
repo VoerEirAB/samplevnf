@@ -408,7 +408,7 @@ static int get_defaults_cfg(__attribute__((unused)) unsigned sindex, char *str, 
 			return -1;
 		}
 
-		for (uint8_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
+		for (uint32_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
 			struct lcore_cfg *cur_lcore_cfg_init = &lcore_cfg_init[lcore_id];
 			cur_lcore_cfg_init->id = lcore_id;
 			for (uint8_t task_id = 0; task_id < MAX_TASKS_PER_CORE; ++task_id) {
@@ -421,7 +421,7 @@ static int get_defaults_cfg(__attribute__((unused)) unsigned sindex, char *str, 
 	}
 
 	if (STR_EQ(str, "qinq tag")) {
-		for (uint8_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
+		for (uint32_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
 			struct lcore_cfg *cur_lcore_cfg_init = &lcore_cfg_init[lcore_id];
 			cur_lcore_cfg_init->id = lcore_id;
 			for (uint8_t task_id = 0; task_id < MAX_TASKS_PER_CORE; ++task_id) {
@@ -437,7 +437,7 @@ static int get_defaults_cfg(__attribute__((unused)) unsigned sindex, char *str, 
 			return -1;
 		}
 
-		for (uint8_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
+		for (uint32_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
 			struct lcore_cfg *cur_lcore_cfg_init = &lcore_cfg_init[lcore_id];
 			cur_lcore_cfg_init->id = lcore_id;
 			for (uint8_t task_id = 0; task_id < MAX_TASKS_PER_CORE; ++task_id) {
@@ -2198,7 +2198,7 @@ static void prox_set_core_mask(void)
 	struct lcore_cfg *lconf;
 
 	prox_core_clr();
-	for (uint8_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
+	for (uint32_t lcore_id = 0; lcore_id < RTE_MAX_LCORE; ++lcore_id) {
 		lconf = &lcore_cfg_init[lcore_id];
 		if (lconf->n_tasks_all > 0 && lconf->targs[0].mode != MASTER) {
 			prox_core_set_active(lcore_id);

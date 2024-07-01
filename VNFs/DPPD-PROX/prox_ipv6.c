@@ -27,6 +27,11 @@ void set_mcast_mac_from_ipv6(prox_rte_ether_addr *mac, struct ipv6_addr *ipv6_ad
 	mac->addr_bytes[0] = 0x33;
 	mac->addr_bytes[1] = 0x33;
 	memcpy(((uint32_t *)&mac->addr_bytes[2]), (uint32_t *)(&ipv6_addr->bytes[12]), sizeof(uint32_t));
+	// Refer part: Solicited-Node Address
+	// https://datatracker.ietf.org/doc/html/rfc4291#section-2.7.1 
+	// We then convert this Solicited Node Address to Multicast-mac Address
+	// For a more simplified version, refer - https://www.ietf.org/proceedings/65/slides/16ng-3/sld5.htm
+	mac->addr_bytes[2] = 0xFF;
 }
 
 // Note that this function is not Mthread safe and would result in garbage if called simultaneously from multiple threads

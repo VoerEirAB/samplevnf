@@ -21,7 +21,9 @@
 
 static inline void prefetch_nta(volatile void *p)
 {
+	#if defined(__x86_64__)
 	asm volatile ("prefetchnta %[p]" : [p] "+m" (*(volatile char *)p));
+	#endif
 }
 
 #ifdef PROX_PREFETCH_OFFSET

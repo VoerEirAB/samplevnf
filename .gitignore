@@ -1,2 +1,5 @@
 .tox
 docs/_build/*
+VNFs/DPPD-PROX/build/*
+
+VNFs/DPPD-PROX/.idea/

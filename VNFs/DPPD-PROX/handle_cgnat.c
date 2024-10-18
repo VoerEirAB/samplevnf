@@ -108,8 +108,13 @@ struct task_nat {
 	volatile int dump_public_hash;
 	volatile int dump_private_hash;
 };
+#ifdef RTE_ARCH_X86
 static __m128i proto_ipsrc_portsrc_mask;
 static __m128i proto_ipdst_portdst_mask;
+#elif defined(__ARM_NEON)
+static int32x4_t proto_ipsrc_portsrc_mask;
+static int32x4_t proto_ipdst_portdst_mask;
+#endif
 struct pkt_eth_ipv4 {
 	prox_rte_ether_hdr ether_hdr;
 	prox_rte_ipv4_hdr  ipv4_hdr;
@@ -914,8 +919,15 @@ static void init_task_nat(struct task_base *tbase, struct task_args *targ)
 	task->public_entries = targ->public_entries;
 	task->public_ip_config_info = targ->public_ip_config_info;
 
+#ifdef RTE_ARCH_X86
 	proto_ipsrc_portsrc_mask = _mm_set_epi32(BIT_0_TO_15, 0, ALL_32_BITS, BIT_8_TO_15);
 	proto_ipdst_portdst_mask = _mm_set_epi32(BIT_16_TO_31, ALL_32_BITS, 0, BIT_8_TO_15);
+#elif defined(__ARM_NEON)
+	int32_t const ptr[] = {(int32_t)BIT_0_TO_15, (int32_t)0, (int32_t)ALL_32_BITS, (int32_t)BIT_8_TO_15};
+	proto_ipsrc_portsrc_mask = vld1q_s32(ptr);
+	int32_t const  ptr2[] = {(int32_t)BIT_16_TO_31, (int32_t)ALL_32_BITS, (int32_t)0, (int32_t)BIT_8_TO_15};
+	proto_ipdst_portdst_mask = vld1q_s32(ptr2);
+#endif
 
 	struct lpm4 *lpm;
 

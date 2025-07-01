@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
-
+#define __USE_GNU
 #include <pthread.h>
 #include <rte_cycles.h>
 #include <rte_table_hash.h>

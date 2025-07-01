@@ -677,8 +677,25 @@ static void init_port(struct prox_port_cfg *port_cfg)
 		// Enable RSS if multiple receive queues
 		if (strcmp(port_cfg->short_name, "virtio")) {
 			port_cfg->port_conf.rxmode.mq_mode       		|= RTE_ETH_MQ_RX_RSS;
-			port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key 	= toeplitz_init_key;
-			port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len 	= TOEPLITZ_KEY_LEN;
+			port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len= port_cfg->dev_info.hash_key_size;
+			printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
+			if (port_cfg->dev_info.hash_key_size == TOEPLITZ_KEY_LEN_52){
+			port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key = toeplitz_init_key_52;
+			for (int i = 0; i < TOEPLITZ_KEY_LEN_52; i++) {
+        printf("%02x ", toeplitz_init_key_52[i]);
+        if ((i + 1) % 8 == 0) printf("\n");
+    }
+			}
+			else{
+			port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key = toeplitz_init_key;
+			for (int i = 0; i < TOEPLITZ_KEY_LEN; i++) {
+        printf("%02x ", toeplitz_init_key[i]);
+        if ((i + 1) % 8 == 0) printf("\n");
+    }
+			}
+			
+			printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
+
 #if RTE_VERSION >= RTE_VERSION_NUM(2,0,0,0)
 			port_cfg->port_conf.rx_adv_conf.rss_conf.rss_hf 	= RTE_ETH_RSS_IP|RTE_ETH_RSS_UDP;
 #else
@@ -689,14 +706,17 @@ static void init_port(struct prox_port_cfg *port_cfg)
 
 	// Make sure that the requested RSS offload is supported by the PMD
 #if RTE_VERSION >= RTE_VERSION_NUM(2,0,0,0)
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 	port_cfg->port_conf.rx_adv_conf.rss_conf.rss_hf &= port_cfg->dev_info.flow_type_rss_offloads;
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 #endif
 	if (strcmp(port_cfg->short_name, "virtio")) {
+		printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 		plog_info("\t\t Enabling RSS rss_hf = 0x%lx (requested 0x%llx, supported 0x%lx)\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_hf, RTE_ETH_RSS_IP|RTE_ETH_RSS_UDP, port_cfg->dev_info.flow_type_rss_offloads);
 	} else {
 		plog_info("\t\t Not enabling RSS on virtio port");
 	}
-
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 	// rxmode such as hw src strip
 #if RTE_VERSION >= RTE_VERSION_NUM(18,8,0,1)
 #if defined (RTE_ETH_RX_OFFLOAD_CRC_STRIP)
@@ -715,6 +735,7 @@ static void init_port(struct prox_port_cfg *port_cfg)
 		port_cfg->port_conf.rxmode.jumbo_frame = 1;
 	}
 #endif
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 
 	// IPV4, UDP, SCTP Checksums
 #if RTE_VERSION >= RTE_VERSION_NUM(18,8,0,1)
@@ -748,7 +769,7 @@ static void init_port(struct prox_port_cfg *port_cfg)
 	else
 		plog_info("\t\tTX offloads enabled on port %d\n", port_id);
 #endif
-
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 	// Refcount
 #if RTE_VERSION >= RTE_VERSION_NUM(18,8,0,1)
 	CONFIGURE_TX_OFFLOAD(RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE);
@@ -758,7 +779,7 @@ static void init_port(struct prox_port_cfg *port_cfg)
 	else
 		plog_info("\t\tRefcnt enabled on port %d\n", port_id);
 #endif
-
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 	plog_info("\t\tConfiguring port %u... with %u RX queues and %u TX queues\n",
 		  port_id, port_cfg->n_rxq, port_cfg->n_txq);
 
@@ -777,7 +798,7 @@ static void init_port(struct prox_port_cfg *port_cfg)
 		port_cfg->port_conf.intr_conf.lsc = 0;
 		plog_info("\t\tDisabling link state interrupt for vmxnet3/VF/virtio (unsupported)\n");
 	}
-
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 	if (port_cfg->lsc_set_explicitely) {
 		port_cfg->port_conf.intr_conf.lsc = port_cfg->lsc_val;
 		plog_info("\t\tOverriding link state interrupt configuration to '%s'\n", port_cfg->lsc_val? "enabled" : "disabled");
@@ -791,7 +812,7 @@ static void init_port(struct prox_port_cfg *port_cfg)
 		plog_info("\t\tNumber of RX descriptors is set to %d (minimum required for %s\n", port_cfg->min_rx_desc, port_cfg->short_name);
 		port_cfg->n_rxd = port_cfg->min_rx_desc;
 	}
-
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
 	if (port_cfg->n_txd > port_cfg->max_tx_desc) {
 		plog_info("\t\tNumber of TX descriptors is set to %d (maximum required for %s\n", port_cfg->max_tx_desc, port_cfg->short_name);
 		port_cfg->n_txd = port_cfg->max_tx_desc;
@@ -801,7 +822,9 @@ static void init_port(struct prox_port_cfg *port_cfg)
 		plog_info("\t\tNumber of RX descriptors is set to %d (maximum required for %s\n", port_cfg->max_rx_desc, port_cfg->short_name);
 		port_cfg->n_rxd = port_cfg->max_rx_desc;
 	}
-
+	printf("port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
+	printf("rss_key_len: %u\n", port_cfg->port_conf.rx_adv_conf.rss_conf.rss_key_len);
+	printf("Hash Key size in port_conf var= %u\n", port_cfg->dev_info.hash_key_size);
 	ret = rte_eth_dev_configure(port_id, port_cfg->n_rxq,
 				    port_cfg->n_txq, &port_cfg->port_conf);
 	PROX_PANIC(ret < 0, "\t\t\trte_eth_dev_configure() failed on port %u: %s (%d)\n", port_id, strerror(-ret), ret);

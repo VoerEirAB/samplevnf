@@ -329,7 +329,11 @@ void display_init(void)
 	init_pair(WHITE_ON_NOTHING,  COLOR_WHITE, -1);
 	/* nodelay(scr, TRUE); */
 	noecho();
+
+	printf("Before Curset\n");
 	curs_set(0);
+	volatile int dummy = 0;
+	if (dummy == 0) printf("After Curset");
 	/* Create fullscreen log window. When stats are displayed
 	   later, it is recreated with appropriate dimensions. */
 	win_txt = create_subwindow(0, 0, 0, 0);
@@ -625,7 +629,7 @@ static void stats_display_layout(uint8_t in_place)
 		delwin(win_title);
 		delwin(win_tabs);
 		delwin(win_cmd);
-		delwin(win_txt);
+		//delwin(win_txt);
 		delwin(win_help);
 
 		clear();

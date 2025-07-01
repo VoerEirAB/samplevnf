@@ -494,7 +494,7 @@ static inline void handle_rs(struct task_base *tbase, struct rte_mbuf *mbuf, pro
 	uint8_t port = get_port(mbuf);
 
 	if (task->internal_port_table[port].flags & IPV6_ROUTER) {
-		plogx_dbg("\tMaster handling Router Solicitation from ip "IPv6_BYTES_FMT" on port %d\n", IPv6_BYTES(ipv6_hdr->src_addr), port);
+		plogx_dbg("\tMaster handling Router Solicitation from ip "IPv6_BYTES_FMT" on port %d\n", IPv6_BYTES(ipv6_hdr->src_addr.a), port);
 		struct rte_ring *ring = task->internal_port_table[port].ring;
 		build_router_advertisement(mbuf, &prox_port_cfg[port].eth_addr, &task->internal_port_table[port].local_ipv6_addr, &task->internal_port_table[port].router_prefix, vlan);
 		tx_ring(tbase, ring, SEND_NDP_FROM_MASTER, mbuf);
@@ -509,7 +509,7 @@ static inline void handle_ra(struct task_base *tbase, struct rte_mbuf *mbuf, pro
 	uint8_t port = get_port(mbuf);
 	struct rte_ring *ring = task->internal_port_table[port].ring;
 
-	plog_dbg("Master handling Router Advertisement from ip "IPv6_BYTES_FMT" on port %d - len = %d; payload_len = %d\n", IPv6_BYTES(ipv6_hdr->src_addr), port, rte_pktmbuf_pkt_len(mbuf), rte_be_to_cpu_16(ipv6_hdr->payload_len));
+	plog_dbg("Master handling Router Advertisement from ip "IPv6_BYTES_FMT" on port %d - len = %d; payload_len = %d\n", IPv6_BYTES(ipv6_hdr->src_addr.a), port, rte_pktmbuf_pkt_len(mbuf), rte_be_to_cpu_16(ipv6_hdr->payload_len));
 	if (rte_be_to_cpu_16(ipv6_hdr->payload_len) + sizeof(prox_rte_ipv6_hdr) + sizeof(prox_rte_ether_hdr) > rte_pktmbuf_pkt_len(mbuf)) {
 		plog_err("Unexpected length received: pkt_len = %d, ipv6 hdr length = %ld, ipv6 payload len = %d\n", rte_pktmbuf_pkt_len(mbuf), sizeof(prox_rte_ipv6_hdr), rte_be_to_cpu_16(ipv6_hdr->payload_len));
 		tx_drop(mbuf);

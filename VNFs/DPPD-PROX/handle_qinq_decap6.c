@@ -117,10 +117,10 @@ static inline uint8_t handle_qinq_decap6(struct task_qinq_decap6 *task, struct r
 
 	int key_found = 0;
 	void* entry_in_hash = NULL;
-	int ret = prox_rte_table_add(task->cpe_table, pip6->src_addr, &entry, &key_found, &entry_in_hash);
+	int ret = prox_rte_table_add(task->cpe_table, &pip6->src_addr, &entry, &key_found, &entry_in_hash);
 
 	if (unlikely(ret)) {
-		plogx_err("Failed to add key " IPv6_BYTES_FMT "\n", IPv6_BYTES(pip6->src_addr));
+		plogx_err("Failed to add key " IPv6_BYTES_FMT "\n", IPv6_BYTES(pip6->src_addr.a));
 		return OUT_DISCARD;
 	}
 

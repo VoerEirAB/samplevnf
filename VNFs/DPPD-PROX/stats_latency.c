@@ -194,6 +194,18 @@ void stats_core_lat_histogram(uint8_t lcore_id, uint8_t task_id, uint64_t **buck
 	else
 		*buckets = NULL;
 }
+
+void stats_core_lat_total_histogram(uint8_t lcore_id, uint8_t task_id, uint64_t **buckets)
+{
+    struct stats_latency_manager_entry *lat_stats;
+
+    lat_stats = stats_latency_entry_find(lcore_id, task_id);
+
+    if (lat_stats)
+		*buckets = lat_stats->tot_lat_test.buckets;
+    else
+		*buckets = NULL;
+}
 #endif
 
 static void stats_latency_fetch_entry(struct stats_latency_manager_entry *entry)

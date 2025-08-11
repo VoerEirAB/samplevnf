@@ -55,6 +55,7 @@ int stats_get_latency_bucket_size(void);
 
 #ifdef LATENCY_HISTOGRAM
 void stats_core_lat_histogram(uint8_t lcore_id, uint8_t task_id, uint64_t **buckets);
+void stats_core_lat_total_histogram(uint8_t lcore_id, uint8_t task_id, uint64_t **buckets);
 #endif
 
 #endif /* _STATS_LATENCY_H_ */

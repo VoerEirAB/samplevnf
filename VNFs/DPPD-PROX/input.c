@@ -16,6 +16,7 @@
 
 #include <rte_cycles.h>
 #include <rte_common.h>
+#include <stdlib.h>
 
 #include "clock.h"
 #include "input.h"

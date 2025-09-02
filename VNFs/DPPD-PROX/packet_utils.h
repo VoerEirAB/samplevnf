@@ -16,6 +16,11 @@
 #ifndef _PACKET_UTILS_H_
 #define _PACKET_UTILS_H_
 
+/* from /usr/include/stdlib.h
+#define	RAND_MAX	2147483647 */
+
+#include <stdlib.h>
+
 #include <rte_cycles.h>
 
 #include "prox_compat.h"

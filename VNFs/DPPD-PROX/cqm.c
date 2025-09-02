@@ -45,12 +45,30 @@ struct reg {
 	uint32_t edx;
 };
 
+#ifdef RTE_ARCH_X86
 static void cpuid(struct reg* r, uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 {
 	asm volatile("cpuid"
 		     : "=a" (r->eax), "=b" (r->ebx), "=c" (r->ecx), "=d" (r->edx)
 		     : "a" (a), "b" (b), "c" (c), "d" (d));
 }
+#elif defined(__ARM_NEON)
+static void cpuid(struct reg *r, uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
+    asm volatile("mov x0, %1\n\t"
+                 "mov x1, %2\n\t"
+                 "mov x2, %3\n\t"
+                 "mov x3, %4\n\t"
+                 "mov x8, #0\n\t"
+                 "svc #0\n\t"
+                 "str x0, [%0]\n\t"
+                 "str x1, [%0, #4]\n\t"
+                 "str x2, [%0, #8]\n\t"
+                 "str x3, [%0, #12]\n\t"
+                 : "+r" (r)
+                 : "r" (a), "r" (b), "r" (c), "r" (d)
+                 : "x0", "x1", "x2", "x3", "x8", "memory");
+}
+#endif
 
 void read_rdt_info(void)
 {

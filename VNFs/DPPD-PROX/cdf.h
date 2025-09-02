@@ -14,6 +14,8 @@
 // limitations under the License.
 */
 
+#include <stdlib.h>
+
 struct cdf {
 	uint32_t rand_max;
 	uint32_t seed;

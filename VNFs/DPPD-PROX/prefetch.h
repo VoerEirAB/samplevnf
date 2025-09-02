@@ -21,7 +21,17 @@
 
 static inline void prefetch_nta(volatile void *p)
 {
+	/*
+	 * No direct prefetching with NTA is supported on __ARM_ARCH. May cost a little on performance.
+	 * There is an LNDP instruction, which can be investigated for support on the various microarchitectures.
+	 *
+	 * Ref:
+	 * - https://developer.arm.com/documentation/ddi0500/d/level-1-memory-system/data-prefetching/non-temporal-loads
+	 * - https://developer.arm.com/documentation/dui0801/h/A64-Data-Transfer-Instructions/LDNP
+	 */
+	#if defined(__x86_64__)
 	asm volatile ("prefetchnta %[p]" : [p] "+m" (*(volatile char *)p));
+	#endif
 }
 
 #ifdef PROX_PREFETCH_OFFSET

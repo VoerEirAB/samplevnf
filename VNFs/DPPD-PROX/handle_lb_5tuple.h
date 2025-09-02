@@ -16,6 +16,9 @@
 
 #ifndef _HANDLE_LB_TUP_H_
 #define _HANDLE_LB_TUP_H_
+#if defined(__ARM_NEON)
+#include <arm_neon.h>
+#endif
 
 union ipv4_5tuple_host {
 	struct {
@@ -27,7 +30,11 @@ union ipv4_5tuple_host {
 		uint16_t port_src;
 		uint16_t port_dst;
 	};
+#ifdef RTE_ARCH_X86
 	__m128i xmm;
+#elif defined(__ARM_NEON)
+	uint8x16_t xmm;
+#endif
 };
 
 #endif /* _HANDLE_LB_TUP_H_ */

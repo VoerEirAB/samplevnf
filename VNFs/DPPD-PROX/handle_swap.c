@@ -32,6 +32,10 @@
 #include "prox_cksum.h"
 #include "prox_compat.h"
 
+#if defined(__ARM_ARCH)
+#include <arm_neon.h>
+#endif
+
 #define MAX_STORE_PKT_SIZE	2048
 
 struct packet {
@@ -182,7 +186,11 @@ static void stop_swap(struct task_base *tbase)
 
 static void handle_ipv6(struct task_swap *task, struct rte_mbuf *mbufs, prox_rte_ipv6_hdr *ipv6_hdr, uint8_t *out)
 {
+	#if defined(__x86_64__)
 	__m128i ip =  _mm_loadu_si128((__m128i*)&(ipv6_hdr->src_addr));
+	#elif defined(__ARM_ARCH)
+	uint8x16_t ip =  vld1q_u8((uint8_t const *)&(ipv6_hdr->src_addr));
+	#endif
 	uint16_t port;
 	uint16_t payload_len;
 	prox_rte_udp_hdr *udp_hdr;

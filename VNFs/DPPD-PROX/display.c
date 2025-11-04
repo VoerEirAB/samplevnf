@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <math.h>
 #include <signal.h>
+#include <pthread.h>
 
 #include "display_latency.h"
 #include "display_mempools.h"

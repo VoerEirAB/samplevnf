@@ -2005,10 +2005,57 @@ static void handle_latency_histogram(unsigned lcore_id, unsigned task_id, struct
 	}
 }
 
+static void parse_bucket_size_freq(struct input *input)
+{
+	uint32_t bucket_size = stats_get_latency_bucket_size();
+	uint64_t hz = rte_get_tsc_hz();
+
+	if (input->reply) {
+			char buf[128];
+			snprintf(buf, sizeof(buf),"Bucket size is %d, freq is %ld\n", bucket_size, hz);
+			input->reply(input, buf, strlen(buf));
+	}
+	else {
+			plog_info("Bucket size is %d, freq is %ld\n", bucket_size, hz);
+	}
+}
+
 static void handle_stats_and_packets(unsigned lcore_id, unsigned task_id, struct input *input)
 {
+	parse_bucket_size_freq(input);
 	handle_lat_stats(lcore_id, task_id, input);
 	handle_latency_histogram(lcore_id, task_id, input);
+}
+
+static void handle_total_latency_histogram(unsigned lcore_id, unsigned task_id, struct input *input)
+{
+	parse_bucket_size_freq(input);
+	
+    uint64_t *buckets;
+
+    stats_core_lat_total_histogram(lcore_id, task_id, &buckets);
+
+    if (buckets == NULL) {
+        if (input->reply) {
+            char buf[128];
+            snprintf(buf, sizeof(buf), "error: unexpected NULL bucket\n");
+            input->reply(input, buf, strlen(buf));
+        }
+        return;
+    }
+
+    if (input->reply) {
+        char buf[4096] = {0};
+        for (size_t i = 0; i < LAT_BUCKET_COUNT; i++)
+            sprintf(buf+strlen(buf), "Total Bucket [%zu]: %"PRIu64"\n", i, buckets[i]);
+        input->reply(input, buf, strlen(buf));
+		
+    }
+    else {
+        for (size_t i = 0; i < LAT_BUCKET_COUNT; i++)
+            if (buckets[i])
+                plog_info("Total Bucket [%zu]: %"PRIu64"\n", i, buckets[i]);
+    }
 }
 #endif
 
@@ -2054,6 +2101,22 @@ static int parse_cmd_lat_stats_and_packets(const char *str, struct input *input)
 	}
 #endif
 	return 0;
+}
+
+static int parse_cmd_lat_tot_stats(const char *str, struct input *input)
+{
+#ifdef LATENCY_HISTOGRAM
+    handle_cores_tasks(str, input, "lat", "latency", handle_total_latency_histogram);
+#else
+    if (input->reply) {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "error: LATENCY_HISTOGRAM disabled\n");
+        input->reply(input, buf, strlen(buf));
+    } else {
+        plog_info("LATENCY_HISTOGRAMS disabled\n");
+    }
+#endif
+    return 0;
 }
 
 static int parse_cmd_show_irq_buckets(const char *str, struct input *input)
@@ -2354,6 +2417,7 @@ static struct cmd_str cmd_strings[] = {
 	{"show irq buckets", "<core id> <task id>", "Print irq buckets", parse_cmd_show_irq_buckets},
 	{"lat packets", "<core id> <task id>", "Print the latency for each of the last set of packets", parse_cmd_lat_packets},
 	{"lat all stats", "<core id> <task id>", "Print the latency for each of the last set of packets as well as latency distribution", parse_cmd_lat_stats_and_packets},
+	{"lat tot stats", "<core id> <task id>", "Print total latency histogram since reset", parse_cmd_lat_tot_stats},
 	{"accuracy limit", "<core id> <task id> <nsec>", "Only consider latency of packets that were measured with an error no more than <nsec>", parse_cmd_accuracy},
 	{"core stats", "<core id> <task id>", "Print rx/tx/drop for task <task id> running on core <core id>", parse_cmd_core_stats},
 	{"dp core stats", "<core id> <task id>", "Print rx/tx/non_dp_rx/non_dp_tx/drop for task <task id> running on core <core id>", parse_cmd_dp_core_stats},

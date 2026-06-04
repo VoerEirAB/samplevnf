@@ -24,6 +24,7 @@
 
 #include "task_init.h"
 #include "stats.h"
+#include <pthread.h>
 
 enum lconf_msg_type {
 	LCONF_MSG_STOP,

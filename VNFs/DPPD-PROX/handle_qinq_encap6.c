@@ -92,7 +92,7 @@ static inline uint8_t handle_qinq_encap6(struct rte_mbuf *mbuf, struct task_qinq
 		return 0;
 	}
 	else {
-		plogx_err("Unknown IP " IPv6_BYTES_FMT "\n", IPv6_BYTES(pip6->dst_addr));
+		plogx_err("Unknown IP " IPv6_BYTES_FMT "\n", IPv6_BYTES(pip6->dst_addr.a));
 		return OUT_DISCARD;
 	}
 }

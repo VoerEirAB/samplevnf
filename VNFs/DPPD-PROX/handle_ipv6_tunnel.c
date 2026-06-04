@@ -469,8 +469,8 @@ static inline uint8_t handle_ipv6_encap(struct task_ipv6_encap* ptask, struct rt
 	pip6->proto = IPPROTO_IPIP;
 	pip6->payload_len = rte_cpu_to_be_16(ipv4_length);
 	pip6->hop_limits = ptask->tunnel_hop_limit;
-	rte_memcpy(pip6->dst_addr, &tun_dest->dst_addr, sizeof(pip6->dst_addr));
-	rte_memcpy(pip6->src_addr, &ptask->local_endpoint_addr, sizeof(pip6->src_addr));
+	rte_memcpy(&pip6->dst_addr, &tun_dest->dst_addr, sizeof(pip6->dst_addr));
+	rte_memcpy(&pip6->src_addr, &ptask->local_endpoint_addr, sizeof(pip6->src_addr));
 
 	if (tun_base->runtime_flags & TASK_TX_CRC) {
 	// We modified the TTL in the IPv4 header, hence have to recompute the IPv4 checksum

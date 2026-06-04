@@ -156,8 +156,8 @@ void build_router_advertisement(struct rte_mbuf *mbuf, prox_rte_ether_addr *s_ad
 	ipv6_hdr->payload_len = rte_cpu_to_be_16(sizeof(struct icmpv6_RA) + sizeof(struct icmpv6_prefix_option));
 	ipv6_hdr->proto = ICMPv6;
 	ipv6_hdr->hop_limits = 255;
-	memcpy(ipv6_hdr->src_addr, ipv6_s_addr, sizeof(struct ipv6_addr));	// 0 = "Unspecified address" if unknown
-	memcpy(ipv6_hdr->dst_addr, &prox_cfg.all_nodes_ipv6_mcast_addr, sizeof(struct ipv6_addr));
+	memcpy(&ipv6_hdr->src_addr, ipv6_s_addr, sizeof(struct ipv6_addr));	// 0 = "Unspecified address" if unknown
+	memcpy(&ipv6_hdr->dst_addr, &prox_cfg.all_nodes_ipv6_mcast_addr, sizeof(struct ipv6_addr));
 
 	struct icmpv6_RA *router_advertisement = (struct icmpv6_RA *)(ipv6_hdr + 1);
 	router_advertisement->type = ICMPv6_RA;
@@ -206,8 +206,8 @@ void build_router_sollicitation(struct rte_mbuf *mbuf, prox_rte_ether_addr *s_ad
 	ipv6_hdr->payload_len = rte_cpu_to_be_16(sizeof(struct icmpv6_RS));
 	ipv6_hdr->proto = ICMPv6;
 	ipv6_hdr->hop_limits = 255;
-	memcpy(ipv6_hdr->src_addr, ipv6_s_addr, sizeof(struct ipv6_addr));	// 0 = "Unspecified address" if unknown
-	memcpy(ipv6_hdr->dst_addr, &prox_cfg.all_routers_ipv6_mcast_addr, sizeof(struct ipv6_addr));
+	memcpy(&ipv6_hdr->src_addr, ipv6_s_addr, sizeof(struct ipv6_addr));	// 0 = "Unspecified address" if unknown
+	memcpy(&ipv6_hdr->dst_addr, &prox_cfg.all_routers_ipv6_mcast_addr, sizeof(struct ipv6_addr));
 
 	struct icmpv6_RS *router_sollicitation = (struct icmpv6_RS *)(ipv6_hdr + 1);
 	router_sollicitation->type = ICMPv6_RS;
@@ -241,8 +241,8 @@ void build_neighbour_sollicitation(struct rte_mbuf *mbuf, prox_rte_ether_addr *s
 	ipv6_hdr->payload_len = rte_cpu_to_be_16(sizeof(struct icmpv6_NS));
 	ipv6_hdr->proto = ICMPv6;
 	ipv6_hdr->hop_limits = 255;
-	memcpy(ipv6_hdr->src_addr, src, 16);
-	memcpy(ipv6_hdr->dst_addr, dst, 16);
+	memcpy(&ipv6_hdr->src_addr, src, 16);
+	memcpy(&ipv6_hdr->dst_addr, dst, 16);
 
 	struct icmpv6_NS *neighbour_sollicitation = (struct icmpv6_NS *)(ipv6_hdr + 1);
 	neighbour_sollicitation->type = ICMPv6_NS;
@@ -275,10 +275,10 @@ void build_neighbour_advertisement(struct task_base *tbase, struct rte_mbuf *mbu
 	// If source mac is null, use all_nodes_mac_addr.
 	if ((!sollicited) || (memcmp(peth->s_addr.addr_bytes, &null_addr, sizeof(struct ipv6_addr)) == 0)) {
 		memcpy(peth->d_addr.addr_bytes, &prox_cfg.all_nodes_mac_addr, sizeof(prox_rte_ether_addr));
-		memcpy(ipv6_hdr->dst_addr, &prox_cfg.all_nodes_ipv6_mcast_addr, sizeof(struct ipv6_addr));
+		memcpy(&ipv6_hdr->dst_addr, &prox_cfg.all_nodes_ipv6_mcast_addr, sizeof(struct ipv6_addr));
 	} else {
 		memcpy(peth->d_addr.addr_bytes, peth->s_addr.addr_bytes, sizeof(prox_rte_ether_addr));
-		memcpy(ipv6_hdr->dst_addr, ipv6_hdr->src_addr, sizeof(struct ipv6_addr));
+		memcpy(&ipv6_hdr->dst_addr, &ipv6_hdr->src_addr, sizeof(struct ipv6_addr));
 	}
 
 	memcpy(peth->s_addr.addr_bytes, &task->internal_port_table[port_id].mac, sizeof(prox_rte_ether_addr));
@@ -287,7 +287,7 @@ void build_neighbour_advertisement(struct task_base *tbase, struct rte_mbuf *mbu
 	ipv6_hdr->payload_len = rte_cpu_to_be_16(sizeof(struct icmpv6_NA));
 	ipv6_hdr->proto = ICMPv6;
 	ipv6_hdr->hop_limits = 255;
-	memcpy(ipv6_hdr->src_addr, src_ipv6_addr, sizeof(struct ipv6_addr));
+	memcpy(&ipv6_hdr->src_addr, src_ipv6_addr, sizeof(struct ipv6_addr));
 
 	struct icmpv6_NA *neighbour_advertisement = (struct icmpv6_NA *)(ipv6_hdr + 1);
 	neighbour_advertisement->type = ICMPv6_NA;

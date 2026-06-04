@@ -289,7 +289,7 @@ static int handle_bulk_impair(struct task_base *tbase, struct rte_mbuf **mbufs, 
 				out[idx] = rand_r(&task->seed) <= task->tresh_no_drop? 0 : OUT_DISCARD;
 				new_mbufs[idx] = task->queue[task->queue_tail].mbuf;
 				PREFETCH0(new_mbufs[idx]);
-				PREFETCH0(&new_mbufs[idx]->cacheline1);
+				PREFETCH0(RTE_PTR_ADD(new_mbufs[idx], RTE_CACHE_LINE_MIN_SIZE));
 				idx++;
 				task->queue_tail = (task->queue_tail + 1) & task->queue_mask;
 			}
@@ -303,7 +303,7 @@ static int handle_bulk_impair(struct task_base *tbase, struct rte_mbuf **mbufs, 
 				out[idx] = 0;
 				new_mbufs[idx] = task->queue[task->queue_tail].mbuf;
 				PREFETCH0(new_mbufs[idx]);
-				PREFETCH0(&new_mbufs[idx]->cacheline1);
+				PREFETCH0(RTE_PTR_ADD(new_mbufs[idx], RTE_CACHE_LINE_MIN_SIZE));
 				idx++;
 				task->queue_tail = (task->queue_tail + 1) & task->queue_mask;
 			}
@@ -404,7 +404,7 @@ static int handle_bulk_impair_random(struct task_base *tbase, struct rte_mbuf **
 			out[pkt_idx] = rand_r(&task->seed) <= task->tresh_no_drop? 0 : OUT_DISCARD;
 			new_mbufs[pkt_idx] = queue->queue_elem[queue->queue_tail].mbuf;
 			PREFETCH0(new_mbufs[pkt_idx]);
-			PREFETCH0(&new_mbufs[pkt_idx]->cacheline1);
+			PREFETCH0(rte_pktmbuf_mtod(new_mbufs[pkt_idx], void *));
 			pkt_idx++;
 			queue->queue_tail = (queue->queue_tail + 1) & task->queue_mask;
 		}

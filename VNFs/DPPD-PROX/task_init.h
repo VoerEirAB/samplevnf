@@ -263,6 +263,29 @@ struct task_args {
 	uint32_t        mirror_size;
 	uint32_t store_max;
 	uint32_t loss_buffer_size;
+
+                /* flowgen (mode=flowgen) */
+        uint32_t  flowgen_dst_ips[16];   /* destination IPs (host order) */
+        uint8_t   flowgen_n_dst_ips;
+        uint32_t  flowgen_flow_rate;     /* total unique flows per interval */
+        uint32_t  flowgen_regen_rate;    /* flows slid per interval */
+        uint32_t  flowgen_flow_interval; /* seconds per interval */
+        uint32_t  flowgen_min_src_port;
+        uint32_t  flowgen_min_dst_port;
+        uint16_t  flowgen_seq_no_offset; /* payload offset for seq_no / phase marker */
+
+        /* burstgen (mode=burstgen) */
+        uint64_t  burstgen_burst_bps;    /* burst phase bps */
+        uint32_t  burstgen_normal_time;  /* seconds per normal phase */
+        uint32_t  burstgen_burst_time;   /* seconds per burst phase */
+
+        /* flowcount (mode=flowcount) */
+        uint32_t  flowcount_src_ips[16]; /* expected sender IPs (host order) */
+        uint8_t   flowcount_n_src_ips;
+        uint32_t  flowcount_self_ip;     /* receiver own IP for ARP */
+        uint8_t   flowcount_arp_enabled; /* 1 = respond to ARP requests */
+        uint8_t   flowcount_burst_mode;  /* 1 = count by phase marker (burstgen RX) */
+        uint32_t  flowcount_flow_hash_size; /* rte_hash capacity per sender */
 };
 
 /* Return the first port that is reachable through the task. If the

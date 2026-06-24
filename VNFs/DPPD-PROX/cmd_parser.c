@@ -51,6 +51,9 @@
 #include "stats_latency.h"
 #include "handle_cgnat.h"
 #include "handle_impair.h"
+#include "handle_flowgen.h"
+#include "handle_burstgen.h"
+#include "handle_flowcount.h"
 #include "rx_pkt.h"
 #include "prox_compat.h"
 #include "igmp.h"
@@ -2286,6 +2289,61 @@ static int parse_cmd_version(const char *str, struct input *input)
 	return 0;
 }
 
+
+static int parse_cmd_flowgen_stats(const char *str, struct input *input)
+{
+	unsigned lcores[RTE_MAX_LCORE], task_id, lcore_id, nb_cores;
+	if (parse_cores_task(str, lcores, &task_id, &nb_cores))
+		return -1;
+	if (!cores_task_are_valid(lcores, task_id, nb_cores))
+		return 0;
+	for (unsigned i = 0; i < nb_cores; i++) {
+		lcore_id = lcores[i];
+		if (!task_is_mode(lcore_id, task_id, "flowgen")) {
+			plog_err("Core %u task %u is not mode=flowgen\n", lcore_id, task_id);
+			continue;
+		}
+		task_flowgen_print_stats(lcore_cfg[lcore_id].tasks_all[task_id]);
+	}
+	return 0;
+}
+
+static int parse_cmd_burstgen_stats(const char *str, struct input *input)
+{
+	unsigned lcores[RTE_MAX_LCORE], task_id, lcore_id, nb_cores;
+	if (parse_cores_task(str, lcores, &task_id, &nb_cores))
+		return -1;
+	if (!cores_task_are_valid(lcores, task_id, nb_cores))
+		return 0;
+	for (unsigned i = 0; i < nb_cores; i++) {
+		lcore_id = lcores[i];
+		if (!task_is_mode(lcore_id, task_id, "burstgen")) {
+			plog_err("Core %u task %u is not mode=burstgen\n", lcore_id, task_id);
+			continue;
+		}
+		task_burstgen_print_stats(lcore_cfg[lcore_id].tasks_all[task_id]);
+	}
+	return 0;
+}
+
+static int parse_cmd_flowcount_stats(const char *str, struct input *input)
+{
+	unsigned lcores[RTE_MAX_LCORE], task_id, lcore_id, nb_cores;
+	if (parse_cores_task(str, lcores, &task_id, &nb_cores))
+		return -1;
+	if (!cores_task_are_valid(lcores, task_id, nb_cores))
+		return 0;
+	for (unsigned i = 0; i < nb_cores; i++) {
+		lcore_id = lcores[i];
+		if (!task_is_mode(lcore_id, task_id, "flowcount")) {
+			plog_err("Core %u task %u is not mode=flowcount\n", lcore_id, task_id);
+			continue;
+		}
+		task_flowcount_print_stats(lcore_cfg[lcore_id].tasks_all[task_id]);
+	}
+	return 0;
+}
+
 struct cmd_str {
 	const char *cmd;
 	const char *args;
@@ -2394,6 +2452,9 @@ static struct cmd_str cmd_strings[] = {
 	{"join igmp", "<core_id> <task_id> <ip>", "Send igmp membership report for group <ip>", parse_cmd_join_igmp},
 	{"leave igmp", "<core_id> <task_id>", "Send igmp leave group", parse_cmd_leave_igmp},
 	{"send unsollicited na", "<core_id> <task_id>", "Send Unsollicited Neighbor Advertisement", parse_cmd_send_unsollicited_na},
+	{"flowgen stats", "<core_id> <task_id>", "Print per-interval TX stats for a flowgen task", parse_cmd_flowgen_stats},
+	{"burstgen stats", "<core_id> <task_id>", "Print normal/burst TX counts for a burstgen task", parse_cmd_burstgen_stats},
+	{"flowcount stats", "<core_id> <task_id>", "Print per-interval RX stats for a flowcount task", parse_cmd_flowcount_stats},
 	{0,0,0,0},
 };
 

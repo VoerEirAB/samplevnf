@@ -1026,6 +1026,78 @@ static int get_core_cfg(unsigned sindex, char *str, void *data)
 	if (STR_EQ(str, "bps")) {
 		return parse_u64(&targ->rate_bps, pkey);
 	}
+
+	/* flowgen config keys */
+	if (STR_EQ(str, "dst ip")) {
+		if (targ->flowgen_n_dst_ips >= 16) {
+			set_errf("Too many 'dst ip=' entries (max 16)");
+			return -1;
+		}
+		return parse_ip(&targ->flowgen_dst_ips[targ->flowgen_n_dst_ips++], pkey);
+	}
+	if (STR_EQ(str, "flow rate")) {
+		return parse_int(&targ->flowgen_flow_rate, pkey);
+	}
+	if (STR_EQ(str, "regen rate")) {
+		return parse_int(&targ->flowgen_regen_rate, pkey);
+	}
+	if (STR_EQ(str, "flow interval")) {
+		return parse_int(&targ->flowgen_flow_interval, pkey);
+	}
+	if (STR_EQ(str, "min src port")) {
+		return parse_int(&targ->flowgen_min_src_port, pkey);
+	}
+	if (STR_EQ(str, "min dst port")) {
+		return parse_int(&targ->flowgen_min_dst_port, pkey);
+	}
+	if (STR_EQ(str, "seq no offset")) {
+		uint32_t v = 0;
+		int rc = parse_int(&v, pkey);
+		if (rc)
+ 			return rc;
+ 		if (v > UINT16_MAX) {
+ 			set_errf("'seq no offset' must be <= %u", UINT16_MAX);
+ 			return -1;
+ 		}
+		targ->flowgen_seq_no_offset = (uint16_t)v;
+		return 0;
+	}
+
+	/* burstgen config keys */
+	if (STR_EQ(str, "burst bps")) {
+		return parse_u64(&targ->burstgen_burst_bps, pkey);
+	}
+	if (STR_EQ(str, "normal time")) {
+		return parse_int(&targ->burstgen_normal_time, pkey);
+	}
+	if (STR_EQ(str, "burst time")) {
+		return parse_int(&targ->burstgen_burst_time, pkey);
+	}
+
+	/* flowcount config keys */
+	if (STR_EQ(str, "src ip")) {
+		if (targ->flowcount_n_src_ips >= 16) {
+			set_errf("Too many 'src ip=' entries (max 16)");
+			return -1;
+		}
+		return parse_ip(&targ->flowcount_src_ips[targ->flowcount_n_src_ips++], pkey);
+	}
+	if (STR_EQ(str, "self ip")) {
+		return parse_ip(&targ->flowcount_self_ip, pkey);
+	}
+	if (STR_EQ(str, "arp")) {
+		targ->flowcount_arp_enabled = (STR_EQ(pkey, "yes") || STR_EQ(pkey, "1")) ? 1 : 0;
+		return 0;
+	}
+	if (STR_EQ(str, "burst")) {
+		targ->flowcount_burst_mode = (STR_EQ(pkey, "yes") || STR_EQ(pkey, "1")) ? 1 : 0;
+		return 0;
+	}
+	if (STR_EQ(str, "flow hash size")) {
+		return parse_int(&targ->flowcount_flow_hash_size, pkey);
+	}
+
+
 	if (STR_EQ(str, "random")) {
 		return parse_str(targ->rand_str[targ->n_rand_str++], pkey, sizeof(targ->rand_str[0]));
 	}

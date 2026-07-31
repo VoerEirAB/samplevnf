@@ -149,6 +149,7 @@ endif
 sources = files(
 	'task_init.c', 'handle_aggregator.c', 'handle_nop.c', 'handle_irq.c',
 	'handle_arp.c', 'handle_impair.c', 'handle_lat.c', 'handle_qos.c',
+	'handle_rfc2544.c',
 	'handle_qinq_decap4.c', 'handle_routing.c', 'handle_untag.c',
 	'handle_mplstag.c', 'handle_qinq_decap6.c',
 	'handle_lb_qinq.c', 'handle_lb_pos.c', 'handle_lb_net.c',

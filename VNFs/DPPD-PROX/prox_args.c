@@ -710,6 +710,157 @@ struct cfg_depr core_cfg_depr[] = {
 };
 
 /* [core] parser */
+/* Parse a percentage of the line rate into parts per million. */
+static int parse_rfc2544_rate(uint32_t *ppm, const char *pkey, uint32_t allow_zero)
+{
+	float pct;
+
+	if (parse_float(&pct, pkey))
+		return -1;
+	if (pct < 0 || pct > 100) {
+		set_errf("rfc2544 rate must be a percentage between 0 and 100");
+		return -1;
+	}
+	*ppm = (uint32_t)(pct * (RFC2544_FULL_RATE / 100) + 0.5);
+	if (!allow_zero && *ppm == 0) {
+		set_errf("rfc2544 rate is too small to be expressed");
+		return -1;
+	}
+	return 0;
+}
+
+/* Parse a duration expressed in seconds into milliseconds. */
+static int parse_rfc2544_duration(uint32_t *msec, const char *pkey)
+{
+	float sec;
+
+	if (parse_float(&sec, pkey))
+		return -1;
+	if (sec < 0 || sec > 86400) {
+		set_errf("rfc2544 duration must be between 0 and 86400 seconds");
+		return -1;
+	}
+	*msec = (uint32_t)(sec * 1000 + 0.5);
+	return 0;
+}
+
+static int parse_rfc2544_frame_sizes(struct rfc2544_cfg *cfg, const char *pkey)
+{
+	char str[MAX_STR_LEN_PROC];
+	char *parts[RFC2544_MAX_FRAME_SIZES + 1];
+	int n_parts;
+
+	if (parse_str(str, pkey, sizeof(str)))
+		return -1;
+
+	n_parts = rte_strsplit(str, strlen(str), parts, RTE_DIM(parts), ',');
+	if (n_parts <= 0 || n_parts > RFC2544_MAX_FRAME_SIZES) {
+		set_errf("rfc2544 frame sizes must be a list of 1 to %u sizes",
+			 RFC2544_MAX_FRAME_SIZES);
+		return -1;
+	}
+
+	for (int i = 0; i < n_parts; ++i) {
+		if (parse_int(&cfg->frame_size[i], parts[i]))
+			return -1;
+		if (cfg->frame_size[i] < RFC2544_MIN_FRAME_SIZE) {
+			set_errf("rfc2544 frame size must be at least %u bytes",
+				 RFC2544_MIN_FRAME_SIZE);
+			return -1;
+		}
+	}
+	cfg->n_frame_sizes = n_parts;
+	return 0;
+}
+
+/* Returns 1 if the key was an rfc2544 key, 0 otherwise. The result of the
+   parsing is stored in *ret. */
+static int parse_rfc2544_task_key(int *ret, struct task_args *targ, const char *str, const char *pkey)
+{
+	struct rfc2544_cfg *cfg = &targ->rfc2544;
+
+	if (STR_EQ(str, "rfc2544 session")) {
+		*ret = parse_str(cfg->session, pkey, sizeof(cfg->session));
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 frame sizes")) {
+		*ret = parse_rfc2544_frame_sizes(cfg, pkey);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 tests")) {
+		char tmp[MAX_STR_LEN_PROC];
+
+		*ret = parse_str(tmp, pkey, sizeof(tmp));
+		if (*ret == 0 && rfc2544_parse_tests(&cfg->tests, tmp) != 0) {
+			set_errf("rfc2544 tests must be a list of 'throughput', 'latency', 'loss' or 'all'");
+			*ret = -1;
+		}
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 trial duration")) {
+		*ret = parse_rfc2544_duration(&cfg->trial_duration_msec, pkey);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 warm up duration")) {
+		*ret = parse_rfc2544_duration(&cfg->warm_up_duration_msec, pkey);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 settle duration")) {
+		*ret = parse_rfc2544_duration(&cfg->settle_duration_msec, pkey);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 inter trial gap")) {
+		*ret = parse_rfc2544_duration(&cfg->inter_trial_gap_msec, pkey);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 start rate")) {
+		*ret = parse_rfc2544_rate(&cfg->start_rate_ppm, pkey, 0);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 resolution")) {
+		*ret = parse_rfc2544_rate(&cfg->resolution_ppm, pkey, 1);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 max loss")) {
+		*ret = parse_rfc2544_rate(&cfg->max_loss_ppm, pkey, 1);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 loss step")) {
+		*ret = parse_rfc2544_rate(&cfg->loss_step_ppm, pkey, 0);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 latency bucket nsec")) {
+		*ret = parse_int(&cfg->lat_bucket_nsec, pkey);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 latency trials")) {
+		*ret = parse_int(&cfg->latency_trials, pkey);
+		if (*ret == 0 && cfg->latency_trials == 0) {
+			set_errf("rfc2544 latency trials must be at least 1");
+			*ret = -1;
+		}
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 line rate")) {
+		*ret = parse_int(&cfg->line_rate_mbps, pkey);
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 ether type")) {
+		*ret = parse_int(&cfg->etype, pkey);
+		if (*ret == 0 && cfg->etype > UINT16_MAX) {
+			set_errf("rfc2544 ether type must fit in 16 bits");
+			*ret = -1;
+		}
+		return 1;
+	}
+	if (STR_EQ(str, "rfc2544 signature")) {
+		*ret = parse_int(&cfg->signature, pkey);
+		return 1;
+	}
+
+	return 0;
+}
+
 static int get_core_cfg(unsigned sindex, char *str, void *data)
 {
 	char *pkey;
@@ -1144,6 +1295,12 @@ static int get_core_cfg(unsigned sindex, char *str, void *data)
 	}
 	if (STR_EQ(str, "accuracy limit nsec")) {
 		return parse_int(&targ->accuracy_limit_nsec, pkey);
+	}
+	{
+		int rfc2544_ret;
+
+		if (parse_rfc2544_task_key(&rfc2544_ret, targ, str, pkey))
+			return rfc2544_ret;
 	}
 	if (STR_EQ(str, "latency bucket size")) {
 		return parse_int(&targ->bucket_size, pkey);

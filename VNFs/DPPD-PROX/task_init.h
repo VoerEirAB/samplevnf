@@ -28,6 +28,7 @@
 #include "ip6_addr.h"
 #include "flow_iter.h"
 #include "parse_utils.h"
+#include "handle_rfc2544.h"
 #include "prox_compat.h"
 
 struct rte_mbuf;
@@ -241,6 +242,7 @@ struct task_args {
 	uint32_t               n_dpi_engine_args;
 	uint32_t               generator_id;
 	uint32_t               accuracy_limit_nsec;
+	struct rfc2544_cfg     rfc2544;
 	/* cgnat related */
 	uint32_t                     public_ip_count;
 	struct public_ip_config_info *public_ip_config_info;

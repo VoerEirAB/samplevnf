@@ -168,6 +168,7 @@ SRCS-y += handle_irq.c
 SRCS-y += handle_arp.c
 SRCS-y += handle_impair.c
 SRCS-y += handle_lat.c
+SRCS-y += handle_rfc2544.c
 SRCS-y += handle_qos.c
 SRCS-y += handle_qinq_decap4.c
 SRCS-y += handle_routing.c

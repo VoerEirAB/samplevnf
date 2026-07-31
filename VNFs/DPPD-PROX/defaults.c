@@ -168,6 +168,7 @@ void set_task_defaults(struct prox_cfg* prox_cfg, struct lcore_cfg* lcore_cfg_in
 			targ->flags |= TASK_ARG_DROP;
 			targ->flags |= TASK_ARG_QINQ_ACL;
 			targ->cpe_table_timeout_ms = DEFAULT_CPE_TIMEOUT_MS;
+			rfc2544_cfg_set_defaults(&targ->rfc2544);
 			targ->n_flows = NB_PIPES;
 			/* configure default values for QoS (can be overwritten by config) */
 			targ->qos_conf.port_params = port_params_default;

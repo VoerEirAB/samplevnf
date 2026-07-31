@@ -1124,12 +1124,14 @@ static void rfc2544_check_cfg(struct task_args *targ, uint32_t max_frame_size)
 static struct rte_mempool *rfc2544_create_mempool(struct task_args *targ, uint32_t max_frame_size)
 {
 	const int sock_id = rte_lcore_to_socket_id(targ->lconf->id);
+	const uint32_t needed_size = (uint32_t)sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM +
+		max_frame_size;
 	uint32_t mbuf_size = TX_MBUF_SIZE;
 	struct rte_mempool *ret;
 	char name[MAX_NAME_SIZE];
 
-	if (max_frame_size + (unsigned)sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM > mbuf_size)
-		mbuf_size = max_frame_size + (unsigned)sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM;
+	if (needed_size > mbuf_size)
+		mbuf_size = needed_size;
 
 	snprintf(name, sizeof(name), "rfc2544_pool_%u_%u", targ->lconf->id, targ->id);
 	ret = rte_mempool_create(name, targ->nb_mbuf - 1, mbuf_size,

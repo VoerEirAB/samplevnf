@@ -213,6 +213,7 @@ struct rfc2544_ctl {
 	uint32_t loss_zero_streak;
 
 	struct rfc2544_counters agg;
+	struct rfc2544_counters lat_agg;
 	struct rfc2544_result results[RFC2544_MAX_FRAME_SIZES];
 };
 
@@ -670,16 +671,18 @@ static uint64_t rfc2544_bucket_to_nsec(const struct rfc2544_ctl *ctl, uint64_t b
 	return tsc_to_nsec((bucket + 1) << ctl->lat_bucket_shift);
 }
 
-static uint64_t rfc2544_percentile_nsec(const struct rfc2544_ctl *ctl, uint64_t percentile_ppm)
+static uint64_t rfc2544_percentile_nsec(const struct rfc2544_ctl *ctl,
+					const struct rfc2544_counters *counters,
+					uint64_t percentile_ppm)
 {
-	uint64_t target = ctl->agg.lat_samples * percentile_ppm / RFC2544_FULL_RATE;
+	uint64_t target = counters->lat_samples * percentile_ppm / RFC2544_FULL_RATE;
 	uint64_t cum = 0;
 
-	if (ctl->agg.lat_samples == 0)
+	if (counters->lat_samples == 0)
 		return 0;
 
 	for (uint64_t i = 0; i < RFC2544_LAT_BUCKETS; ++i) {
-		cum += ctl->agg.buckets[i];
+		cum += counters->buckets[i];
 		if (cum >= target)
 			return rfc2544_bucket_to_nsec(ctl, i);
 	}
@@ -706,6 +709,19 @@ static void rfc2544_ctl_publish_phase(struct rfc2544_ctl *ctl, struct rfc2544_se
 	ctl->sync_next = next;
 	ctl->sync_deadline = rte_rdtsc() + msec_to_tsc(RFC2544_SYNC_TIMEOUT_MSEC);
 	ctl->state = RFC2544_CTL_SYNC;
+}
+
+static int rfc2544_ctl_all_running(struct rfc2544_session *session)
+{
+	for (uint32_t i = 0; i < session->n_gen; ++i) {
+		if (!__atomic_load_n(&session->gen[i].running, __ATOMIC_ACQUIRE))
+			return 0;
+	}
+	for (uint32_t i = 0; i < session->n_lat; ++i) {
+		if (!__atomic_load_n(&session->lat[i].running, __ATOMIC_ACQUIRE))
+			return 0;
+	}
+	return 1;
 }
 
 static int rfc2544_ctl_all_acked(struct rfc2544_session *session)
@@ -770,10 +786,13 @@ static int rfc2544_ctl_trial_passed(const struct rfc2544_ctl *ctl)
 static uint64_t rfc2544_ctl_measured_fps(const struct rfc2544_ctl *ctl)
 {
 	uint64_t duration = ctl->measure_stop_tsc - ctl->measure_start_tsc;
+	uint64_t msec = duration * 1000 / ctl->hz;
 
-	if (duration == 0)
+	/* Multiplying the number of frames with the tsc frequency would
+	   overflow for long trials at high frame rates. */
+	if (msec == 0)
 		return 0;
-	return ctl->agg.tx_frames * ctl->hz / duration;
+	return ctl->agg.tx_frames * 1000 / msec;
 }
 
 static void rfc2544_ctl_log_trial(struct rfc2544_ctl *ctl, const char *what)
@@ -788,20 +807,24 @@ static void rfc2544_ctl_log_trial(struct rfc2544_ctl *ctl, const char *what)
 		  loss_ppm / 10000.0, ctl->agg.reordered);
 }
 
+/* RFC2544 section 26.2 asks for the latency trial to be repeated. The
+   samples of all the repetitions are aggregated into a single result. */
 static void rfc2544_ctl_store_latency(struct rfc2544_ctl *ctl)
 {
 	struct rfc2544_result *res = &ctl->results[ctl->fs_idx];
 
-	if (ctl->agg.lat_samples == 0)
+	rfc2544_counters_add(&ctl->lat_agg, &ctl->agg);
+
+	if (ctl->lat_agg.lat_samples == 0)
 		return;
 
 	res->latency_valid = 1;
-	res->lat_samples = ctl->agg.lat_samples;
-	res->lat_min_nsec = tsc_to_nsec(ctl->agg.lat_min);
-	res->lat_max_nsec = tsc_to_nsec(ctl->agg.lat_max);
-	res->lat_avg_nsec = tsc_to_nsec(ctl->agg.lat_total / ctl->agg.lat_samples);
-	res->lat_p50_nsec = rfc2544_percentile_nsec(ctl, 500000);
-	res->lat_p99_nsec = rfc2544_percentile_nsec(ctl, 990000);
+	res->lat_samples = ctl->lat_agg.lat_samples;
+	res->lat_min_nsec = tsc_to_nsec(ctl->lat_agg.lat_min);
+	res->lat_max_nsec = tsc_to_nsec(ctl->lat_agg.lat_max);
+	res->lat_avg_nsec = tsc_to_nsec(ctl->lat_agg.lat_total / ctl->lat_agg.lat_samples);
+	res->lat_p50_nsec = rfc2544_percentile_nsec(ctl, &ctl->lat_agg, 500000);
+	res->lat_p99_nsec = rfc2544_percentile_nsec(ctl, &ctl->lat_agg, 990000);
 }
 
 static void rfc2544_ctl_report(struct rfc2544_ctl *ctl)
@@ -813,7 +836,7 @@ static void rfc2544_ctl_report(struct rfc2544_ctl *ctl)
 		if (ctl->cfg.tests & RFC2544_TEST_THROUGHPUT) {
 			if (res->throughput_valid)
 				plog_info("Throughput: frame size %u: %.4f%% of line rate, "
-					  "%" PRIu64 " fps, %" PRIu64 " Mbps\n",
+					  "%" PRIu64 " fps, %" PRIu64 " Mbps on the wire\n",
 					  res->frame_size, res->throughput_ppm / 10000.0,
 					  res->throughput_fps, res->throughput_bps / 1000000);
 			else
@@ -888,6 +911,7 @@ static int rfc2544_ctl_next_trial(struct rfc2544_ctl *ctl)
 			ctl->hi_ppm = ctl->cfg.start_rate_ppm;
 			ctl->cur_ppm = ctl->cfg.start_rate_ppm;
 			ctl->lat_trial = 0;
+			rfc2544_counters_reset(&ctl->lat_agg);
 			if (ctl->fs_idx < ctl->cfg.n_frame_sizes)
 				ctl->results[ctl->fs_idx].frame_size = ctl->cfg.frame_size[ctl->fs_idx];
 			continue;
@@ -953,7 +977,9 @@ static void rfc2544_ctl_run(struct rfc2544_ctl *ctl, struct rfc2544_session *ses
 {
 	switch (ctl->state) {
 	case RFC2544_CTL_WAIT_WORKERS:
-		if (tsc < ctl->deadline)
+		/* Do not start before every task of the session is running,
+		   otherwise the frames of the first trial would be missed. */
+		if (!rfc2544_ctl_all_running(session) && tsc < ctl->deadline)
 			return;
 		if (session->n_lat == 0) {
 			plog_err("RFC2544: no 'rfc2544lat' task configured, cannot measure\n");
@@ -1047,18 +1073,14 @@ static void rfc2544_ctl_run(struct rfc2544_ctl *ctl, struct rfc2544_session *ses
  * Initialization
  */
 
-static uint64_t rfc2544_line_bytes_per_sec(struct task_args *targ, uint8_t port_id)
+static uint64_t rfc2544_line_bytes_per_sec(struct task_args *targ, struct prox_port_cfg *port)
 {
-	struct prox_port_cfg *port;
-
 	if (targ->rfc2544.line_rate_mbps)
 		return (uint64_t)targ->rfc2544.line_rate_mbps * 125000;
 
-	if (port_id == OUT_DISCARD)
-		return 0;
-
-	port = &prox_port_cfg[port_id];
-	if (port->max_link_speed == 0 || port->max_link_speed == UINT32_MAX)
+	/* max_link_speed reports the maximum, non negotiated link speed in
+	   Mbps, e.g. 40000 for a 40 Gbps NIC. */
+	if (port == NULL || port->max_link_speed == 0 || port->max_link_speed == UINT32_MAX)
 		return 0;
 
 	return (uint64_t)port->max_link_speed * 125000;
@@ -1129,7 +1151,6 @@ static void init_task_rfc2544_gen(struct task_base *tbase, struct task_args *tar
 	uint32_t max_frame_size = PROX_RTE_ETHER_MAX_LEN;
 	uint64_t line_bytes_per_sec;
 	struct token_time_cfg tt_cfg;
-	uint8_t port_id = OUT_DISCARD;
 
 	PROX_PANIC(session->n_gen >= RFC2544_MAX_GENERATORS,
 		   "Too many rfc2544 generators in session '%s' (max %u)\n",
@@ -1137,12 +1158,10 @@ static void init_task_rfc2544_gen(struct task_base *tbase, struct task_args *tar
 	PROX_PANIC(targ->nb_txports == 0 && targ->nb_txrings == 0,
 		   "rfc2544gen requires a tx port or a tx ring\n");
 
-	if (port) {
+	if (port)
 		max_frame_size = port->mtu + PROX_RTE_ETHER_HDR_LEN + PROX_RTE_ETHER_CRC_LEN;
-		port_id = port - prox_port_cfg;
-	}
 	rfc2544_check_cfg(targ, max_frame_size);
-	line_bytes_per_sec = rfc2544_line_bytes_per_sec(targ, port_id);
+	line_bytes_per_sec = rfc2544_line_bytes_per_sec(targ, port);
 
 	task->session = session;
 	task->gen_id = session->n_gen++;
@@ -1251,7 +1270,7 @@ static void start_rfc2544_gen(struct task_base *tbase)
 
 	if (task->ctl != NULL && task->ctl->state == RFC2544_CTL_WAIT_WORKERS) {
 		/* Give the other tasks of the session the time to start. */
-		task->ctl->deadline = rte_rdtsc() + msec_to_tsc(1000);
+		task->ctl->deadline = rte_rdtsc() + msec_to_tsc(5000);
 	}
 }
 

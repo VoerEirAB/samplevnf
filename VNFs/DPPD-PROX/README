@@ -186,3 +186,83 @@ Light-weight AFTR configurations:
 - config/lw_aftr.cfg
 - gen/lw_aftr-gen.cfg
 
+
+RFC2544 benchmarking configuration:
+- config/rfc2544.cfg
+
+RFC2544 benchmarking
+--------------------
+The 'rfc2544gen' and 'rfc2544lat' task modes benchmark a layer 2
+forwarding device according to RFC2544 ("Benchmarking Methodology for
+Network Interconnect Devices"). The 'rfc2544gen' mode offers the test
+streams to the device under test (DUT) and the 'rfc2544lat' mode
+receives the frames forwarded by the DUT and measures frame loss,
+latency and re-ordering. Both modes are used together in
+config/rfc2544.cfg.
+
+The first 'rfc2544gen' task of a session also runs the test procedure
+of RFC2544 section 26 without any external control: the throughput is
+determined with a binary search on the offered load (section 26.1), the
+latency is measured while offering that throughput (section 26.2) and
+the frame loss rate is measured over a sweep of decreasing offered
+loads (section 26.3). The whole procedure is repeated for every
+configured frame size and the results are written to the log once the
+last trial is finished.
+
+Tasks that use the same 'rfc2544 session' name belong to the same test.
+They exchange the state of the test through a lock free shared
+structure, so that the load can be spread over several cores without
+introducing contention on the data path.
+
+The following per task configuration keys are supported. All of them
+have a default value, so a minimal configuration only needs to set
+'mode', the ports and, if several tests run at the same time, the
+session name.
+
+  rfc2544 session             Name of the test the task takes part in.
+                              Default: rfc2544
+  rfc2544 tests               Comma separated list of the tests to run:
+                              throughput, latency, loss or all.
+                              Default: all
+  rfc2544 frame sizes         Comma separated list of the frame sizes,
+                              in bytes, including the frame check
+                              sequence. Default: the sizes recommended
+                              by RFC2544 appendix C.2.1
+  rfc2544 trial duration      Duration of a trial, in seconds.
+                              Default: 60
+  rfc2544 warm up duration    Duration of the untimed traffic sent
+                              before every trial so that the DUT can
+                              learn the addresses used, in seconds.
+                              Default: 2
+  rfc2544 settle duration     Time the receivers keep counting after
+                              the generators stopped, in seconds.
+                              Default: 2
+  rfc2544 inter trial gap     Idle time between two trials, in seconds.
+                              Default: 2
+  rfc2544 start rate          Highest load offered to the DUT, as a
+                              percentage of the line rate. Default: 100
+  rfc2544 resolution          The binary search stops once the interval
+                              that is left to explore is smaller than
+                              this percentage of the line rate.
+                              Default: 0.1
+  rfc2544 max loss            Loss ratio, in percent, that is still
+                              considered a successful trial. Default: 0
+  rfc2544 loss step           Load decrement of the frame loss rate
+                              test, as a percentage of the line rate.
+                              Default: 10
+  rfc2544 latency trials      Number of repetitions of the latency
+                              trial. Default: 1
+  rfc2544 latency bucket nsec Width of a bucket of the latency
+                              histogram, in nanoseconds. Default: 100
+  rfc2544 line rate           Line rate of the port, in Mbps. By
+                              default the speed reported by the port is
+                              used.
+  rfc2544 ether type          Ethertype of the test frames.
+                              Default: 0x88B5
+  rfc2544 signature           Signature written in the test frames so
+                              that the receivers can tell them apart
+                              from other traffic. Default: 0x52464332
+
+The generator uses the mac address of the transmitting port as the
+source address and the broadcast address as the destination address.
+Both can be overridden with the 'src mac' and 'dst mac' keys.

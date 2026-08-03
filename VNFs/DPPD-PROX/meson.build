@@ -156,6 +156,8 @@ sources = files(
 	'handle_l2fwd.c', 'handle_swap.c', 'handle_police.c', 'handle_acl.c',
 	'handle_gen.c', 'handle_master.c', 'packet_utils.c', 'handle_mirror.c',
 	'handle_genl4.c', 'handle_ipv6_tunnel.c', 'handle_read.c',
+	'handle_flowgen.c', 'handle_flowcount.c',
+	'handle_burstgen.c',
 	'handle_cgnat.c', 'handle_nat.c', 'handle_dump.c', 'handle_tsc.c',
 	'handle_fm.c', 'handle_lb_5tuple.c', 'handle_blockudp.c', 'toeplitz.c',
 	'thread_nop.c', 'thread_generic.c', 'prox_args.c', 'prox_cfg.c',

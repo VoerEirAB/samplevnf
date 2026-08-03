@@ -196,6 +196,9 @@ SRCS-y += handle_mirror.c
 SRCS-y += handle_genl4.c
 SRCS-y += handle_ipv6_tunnel.c
 SRCS-y += handle_read.c
+SRCS-y += handle_flowgen.c
+SRCS-y += handle_burstgen.c
+SRCS-y += handle_flowcount.c
 SRCS-$(CONFIG_RTE_LIBRTE_PMD_AESNI_MB) += handle_esp.c
 ifneq ($(CONFIG_RTE_LIBRTE_PMD_AESNI_MB),y)
 ifeq ($(FIRST_PROX_MAKE),)
